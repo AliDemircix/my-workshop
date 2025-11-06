@@ -33,10 +33,10 @@ export default function ReservationFlow() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Left: Category info and image (2/3 width) */}
-        <div className="md:col-span-2 space-y-6">
+    <div className="w-full">
+      <div className="grid lg:grid-cols-4 gap-8">
+        {/* Left: Category info and image (3/4 width) */}
+        <div className="lg:col-span-3 space-y-6">
           {categoryId && categories && (
             (() => {
               const cat = categories.find((c: CategoryWithMeta) => c.id === categoryId);
@@ -71,8 +71,8 @@ export default function ReservationFlow() {
           )}
         </div>
 
-        {/* Right: Booking sidebar (1/3 width) */}
-        <aside className="md:col-span-1">
+        {/* Right: Booking sidebar (1/4 width) */}
+        <aside className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-lg border p-6 space-y-6 sticky top-6">
             <div>
               <label className="block text-sm font-semibold mb-3 text-gray-900">Choose Workshop Category</label>

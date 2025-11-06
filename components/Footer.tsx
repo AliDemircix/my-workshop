@@ -108,6 +108,7 @@ export default async function Footer() {
             <li><span className="font-medium">Phone:</span> {telephone}</li>
             <li><span className="font-medium">Address:</span> {address}</li>
             <li><span className="font-medium">KVK:</span> {kvk}</li>
+            <li><span className="font-medium">IBAN:</span> {iban}</li>
           </ul>
         </div>
       </div>

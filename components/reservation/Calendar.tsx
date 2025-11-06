@@ -48,9 +48,9 @@ export default function Calendar({
                 'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200',
                 inMonth ? '' : 'opacity-40',
                 canSelect 
-                  ? 'border-gray-200 hover:border-[#c99706] hover:bg-orange-50 bg-white' 
+                  ? 'border-gray-200 hover:border-orange-400 hover:bg-orange-50 bg-white' 
                   : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed',
-                isSelected ? 'bg-[#c99706] border-[#c99706] text-white shadow-md' : '',
+                isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-md' : '',
                 isPastDate ? 'opacity-50 line-through' : '',
               ].join(' ')}
             >
