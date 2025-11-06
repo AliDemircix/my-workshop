@@ -1,2 +1,2 @@
-import ReservePage from './(site)/reserve/page';
-export default ReservePage;
+import HomePage from './(site)/page';
+export default HomePage;
