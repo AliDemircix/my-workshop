@@ -22,10 +22,10 @@ export default function Calendar({
   const today = startOfDay(new Date());
 
   return (
-    <div className="border rounded p-3">
-      <div className="grid grid-cols-7 text-xs text-gray-500 mb-2">
+    <div className="border border-gray-200 rounded-lg p-4 bg-white">
+      <div className="grid grid-cols-7 text-xs font-medium text-gray-500 mb-3">
         {weekday.map((w) => (
-          <div key={w} className="text-center py-1">
+          <div key={w} className="text-center py-2">
             {w}
           </div>
         ))}
@@ -45,10 +45,12 @@ export default function Calendar({
               disabled={!canSelect}
               onClick={() => canSelect && onSelect(key)}
               className={[
-                'aspect-square rounded border flex items-center justify-center text-sm',
+                'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200',
                 inMonth ? '' : 'opacity-40',
-                canSelect ? 'hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed',
-                isSelected ? 'bg-[#c99706] text-white' : '',
+                canSelect 
+                  ? 'border-gray-200 hover:border-[#c99706] hover:bg-orange-50 bg-white' 
+                  : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed',
+                isSelected ? 'bg-[#c99706] border-[#c99706] text-white shadow-md' : '',
                 isPastDate ? 'opacity-50 line-through' : '',
               ].join(' ')}
             >

@@ -32,13 +32,20 @@ export default function Nav({ isAdmin = false }: Props) {
       >
         Home
       </Link>
+      <Link
+        className="bg-[#c99706] hover:bg-[#b8860b] text-white px-4 py-2 rounded-md font-semibold transition-all duration-300 no-underline"
+        href="/reserve"
+      >
+        Book Workshop
+      </Link>
       <a
         className={clsx(base, inactive)}
         href="https://giftoria.nl"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         Webshop
       </a>
-      {/* Reserve link removed; Reserve is now the home page */}
 
       {isAdmin && (
         <Link
