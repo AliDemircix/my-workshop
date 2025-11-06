@@ -1,0 +1,94 @@
+// Datasource
+ datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  description String? 
+  imageUrl   String?
+  slug       String?  @unique
+  longDescription String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sessions  Session[]
+}
+
+model Session {
+  id           Int           @id @default(autoincrement())
+  category     Category      @relation(fields: [categoryId], references: [id])
+  categoryId   Int
+  date         DateTime
+  startTime    DateTime
+  endTime      DateTime
+  capacity     Int
+  priceCents   Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+  stripePriceId String?      // Optional override per-session (else use category/price mapping)
+}
+
+model Reservation {
+  id                        Int       @id @default(autoincrement())
+  session                   Session   @relation(fields: [sessionId], references: [id])
+  sessionId                 Int
+  email                     String
+  name                      String
+  quantity                  Int       @default(1)
+  status                    String    @default("PENDING") // PENDING | PAID | CANCELED | REFUNDED
+  stripePaymentIntentId     String?
+  stripeCheckoutSessionId   String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  canceledAt                DateTime?
+  refundId                  String?
+}
+
+// Global site settings (single row with id=1)
+model SiteSettings {
+  id             Int      @id
+  // Column 1: policy pages
+  privacyLabel   String?  @default("Privacy Policy")
+  privacyUrl     String?  @default("/privacy-policy")
+  contactLabel   String?  @default("Contact")
+  contactUrl     String?  @default("/contact")
+  refundLabel    String?  @default("Refund Policy")
+  refundUrl      String?  @default("/refund")
+  // Editable policy contents
+  privacyContent String?
+  refundContent  String?
+  // Column 2: social
+  facebookUrl    String?
+  instagramUrl   String?
+  youtubeUrl     String?
+  // Column 3: contact info
+  email          String?
+  telephone      String?
+  address        String?
+  kvk            String?
+  iban           String?
+  // Branding
+  logoUrl       String?
+  sliderImages   SiteSliderImage[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Slider images for the Reserve page
+model SiteSliderImage {
+  id             Int          @id @default(autoincrement())
+  url            String
+  position       Int          @default(0)
+  siteSettingsId Int
+  siteSettings   SiteSettings @relation(fields: [siteSettingsId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}

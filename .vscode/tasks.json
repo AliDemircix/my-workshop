@@ -1,0 +1,154 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Dev: Next.js",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-category-description-image"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-site-settings"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-site-settings"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (policy-content)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-policy-content"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (slider-images)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-slider-images"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (slider-images)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-slider-images"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (slider-images)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-slider-images"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (slider-images)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-slider-images"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "DB: Prisma migrate dev (logo-url)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"migrate",
+				"dev",
+				"--name",
+				"add-site-logo-url"
+			],
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}
