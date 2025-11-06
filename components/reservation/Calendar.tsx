@@ -1,5 +1,5 @@
 "use client";
-import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameMonth, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameMonth, startOfDay, startOfMonth, startOfWeek, isAfter, isSameDay } from 'date-fns';
 
 export default function Calendar({
   monthDate,
@@ -19,6 +19,7 @@ export default function Calendar({
   const has = new Set(availabilityKeys);
   const toKey = (d: Date) => startOfDay(d).toISOString();
   const weekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const today = startOfDay(new Date());
 
   return (
     <div className="border rounded p-3">
@@ -35,16 +36,20 @@ export default function Calendar({
           const inMonth = isSameMonth(d, monthDate);
           const available = has.has(key);
           const isSelected = selectedKey === key;
+          const isPastDate = !isAfter(d, today) && !isSameDay(d, today);
+          const canSelect = available && !isPastDate;
+          
           return (
             <button
               key={key}
-              disabled={!available}
-              onClick={() => available && onSelect(key)}
+              disabled={!canSelect}
+              onClick={() => canSelect && onSelect(key)}
               className={[
                 'aspect-square rounded border flex items-center justify-center text-sm',
                 inMonth ? '' : 'opacity-40',
-                available ? 'hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed',
+                canSelect ? 'hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed',
                 isSelected ? 'bg-[#c99706] text-white' : '',
+                isPastDate ? 'opacity-50 line-through' : '',
               ].join(' ')}
             >
               {format(d, 'd')}
