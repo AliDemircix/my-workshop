@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Slider from '@/components/Slider';
 import Testimonials from '@/components/Testimonials';
 import { formatEUR } from '@/lib/currency';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -211,7 +212,7 @@ export default async function HomePage() {
                       {category.description && (
                         <div 
                           className="prose prose-sm prose-gray max-w-none text-gray-600 line-clamp-3" 
-                          dangerouslySetInnerHTML={{ __html: category.description }} 
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(category.description) }} 
                         />
                       )}
                     </div>

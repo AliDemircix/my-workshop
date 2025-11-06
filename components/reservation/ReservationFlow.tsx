@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { addMonths, format, startOfMonth } from 'date-fns';
 import ReservationSidebar from './ReservationSidebar';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 type Category = { id: number; name: string };
 type CategoryWithMeta = { id: number; name: string; slug?: string | null; description?: string | null; imageUrl?: string | null; longDescription?: string | null };
@@ -61,7 +62,7 @@ export default function ReservationFlow() {
                     <div className="bg-white rounded-lg p-6 shadow-sm border">
                       <h2 className="text-2xl font-bold text-gray-900 mb-3">{cat.name}</h2>
                       {desc && (
-                        <div className="prose prose-sm prose-slate max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: desc }} />
+                        <div className="prose prose-sm prose-slate max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
                       )}
                     </div>
                   )}

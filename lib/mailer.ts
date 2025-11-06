@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { logger } from './logger';
 
 const host = process.env.SMTP_HOST;
 const port = Number(process.env.SMTP_PORT || 587);
@@ -19,18 +20,26 @@ export function hasSmtpConfig() {
 
 export async function sendMail(opts: { to: string; subject: string; html: string; text?: string }) {
   if (!hasSmtpConfig()) {
-    console.warn('SMTP not configured; skipping email send');
+    logger.smtpWarning('SMTP not configured; skipping email send');
     return;
   }
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure, // true for 465, false for 587/25
-    auth: { user, pass },
-    tls: {
-      ...(tlsServername ? { servername: tlsServername } : {}),
-      ...(typeof tlsRejectUnauthorized === 'boolean' ? { rejectUnauthorized: tlsRejectUnauthorized } : {}),
-    },
-  });
-  await transporter.sendMail({ from, ...opts });
+  
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure, // true for 465, false for 587/25
+      auth: { user, pass },
+      tls: {
+        ...(tlsServername ? { servername: tlsServername } : {}),
+        ...(typeof tlsRejectUnauthorized === 'boolean' ? { rejectUnauthorized: tlsRejectUnauthorized } : {}),
+      },
+    });
+    
+    await transporter.sendMail({ from, ...opts });
+    logger.info('Email sent successfully', { to: opts.to, subject: opts.subject });
+  } catch (error) {
+    logger.emailError('sendMail', error as Error, { to: opts.to, subject: opts.subject });
+    throw error; // Re-throw for upstream handling
+  }
 }

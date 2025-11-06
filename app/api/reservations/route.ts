@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { sendMail } from '@/lib/mailer';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const CreateSchema = z.object({
   sessionId: z.number(),
@@ -97,7 +98,7 @@ Aangemaakt op: ${reservation.createdAt.toLocaleString('nl-NL')}
       `
     });
   } catch (error) {
-    console.error('Failed to send notification email:', error);
+    logger.emailError('reservation notification', error as Error, { reservationId: reservation.id, sessionId, email });
     // Don't fail the reservation if email fails
   }
 

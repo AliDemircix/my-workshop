@@ -7,7 +7,12 @@ export default function AdminLoginPage() {
     const u = formData.get('username');
     const p = formData.get('password');
     if (u === process.env.ADMIN_USERNAME && p === process.env.ADMIN_PASSWORD) {
-      cookies().set('admin', '1', { httpOnly: false, sameSite: 'lax' });
+      cookies().set('admin', '1', { 
+        httpOnly: true, 
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 // 24 hours
+      });
       redirect('/admin');
     }
     redirect('/admin/login?error=1');

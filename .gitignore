@@ -10,6 +10,8 @@ pnpm-debug.log*
 .next/
 out/
 .next-standalone/
+build/
+dist/
 
 # Logs
 logs
@@ -25,8 +27,51 @@ logs
 # Prisma
 prisma/dev.db
 prisma/dev.db-journal
+prisma/migrations/*/migration.sql
 
 # Vercel
 .vercel
+
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# IDE & Editors
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# Package managers (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Local development
+.local
+.vscode-test/
 
 .github

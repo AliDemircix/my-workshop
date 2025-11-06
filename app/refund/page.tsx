@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export default async function RefundPolicyPage() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } }).catch(() => null as any);
@@ -7,7 +8,7 @@ export default async function RefundPolicyPage() {
     <div className="prose prose-invert max-w-none">
       <h1>Refund Policy</h1>
       {content ? (
-        <div dangerouslySetInnerHTML={{ __html: content }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
       ) : (
         <>
           <p>Last updated: September 18, 2025</p>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { startOfMonth } from 'date-fns';
 import ReservationSidebar from '@/components/reservation/ReservationSidebar';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 type Category = {
   id: number;
@@ -21,19 +22,26 @@ export default function WorkshopDetail({ category }: { category: Category }) {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Left: Image + rich description (2/3 width) */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="w-full aspect-[16/9] rounded border bg-gray-100 flex items-center justify-center overflow-hidden">
-            {category.imageUrl ? (
-              <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-gray-500">Workshop image</div>
-            )}
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+        
+        {category.imageUrl && (
+          <div className="w-full aspect-[16/9] rounded-lg overflow-hidden">
+            <img 
+              src={category.imageUrl} 
+              alt={category.name}
+              className="w-full h-full object-cover"
+            />
           </div>
-          {(category.longDescription || category.description) && (
-            <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: category.longDescription || category.description || '' }} />
+        )}
+        
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">About This Workshop</h2>
+          {(category.longDescription || category.description) ? (
+            <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(category.longDescription || category.description || '') }} />
+          ) : (
+            <p className="text-gray-600">No description available for this workshop.</p>
           )}
         </div>
 

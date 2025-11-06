@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 
 export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: number; remaining?: number }) {
   const [name, setName] = useState('');
@@ -38,7 +39,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
       const data = await checkout.json();
       if (data.url) window.location.href = data.url;
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Error creating reservation');
+      toast.error(e instanceof Error ? e.message : 'Error creating reservation');
     } finally {
       setLoading(false);
     }
