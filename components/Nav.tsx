@@ -17,7 +17,7 @@ export default function Nav({ isAdmin = false }: Props) {
     return pathname.startsWith(href);
   };
 
-  const base = 'underline underline-offset-4';
+  const base = 'underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-1 focus-visible:ring-offset-black rounded-sm';
   const inactive = 'text-gray-300 hover:text-white hover:decoration-2';
   const active = 'text-white font-semibold decoration-2';
 
@@ -40,7 +40,7 @@ export default function Nav({ isAdmin = false }: Props) {
         Gift Cards
       </Link>
       <Link
-        className="bg-[#c99706] hover:bg-[#b8860b] text-white px-4 py-2 rounded-md font-semibold transition-all duration-300 no-underline"
+        className="bg-[#c99706] hover:bg-[#b8860b] text-white px-4 py-2 rounded-md font-semibold transition-all duration-300 no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         href="/reserve"
       >
         Book Workshop

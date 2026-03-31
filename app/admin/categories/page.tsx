@@ -117,6 +117,22 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
           </div>
         </form>
 
+      {categories.length === 0 && (
+        <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <p className="text-gray-600 font-medium">No categories yet</p>
+            <p className="text-sm text-gray-400 mt-1">Add your first workshop category using the form above.</p>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
           <thead className="bg-gray-50">

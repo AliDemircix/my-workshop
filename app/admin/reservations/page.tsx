@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
 import { requireAdminAction } from '@/lib/auth';
+import CancelReservationButton from '@/components/admin/CancelReservationButton';
 
 export const runtime = 'nodejs';
 
@@ -222,16 +223,17 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <form action={cancelReservation}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <input type="hidden" name="page" value={page} />
-                    <input type="hidden" name="perPage" value={perPage} />
-                    <input type="hidden" name="sort" value={sort} />
-                    <input type="hidden" name="status" value={status} />
-                    <input type="hidden" name="categoryId" value={categoryId || ''} />
-                    <input type="hidden" name="q" value={q} />
-                    <button className="text-red-600 underline" disabled={r.status === 'REFUNDED' || r.status === 'CANCELED'}>Cancel & Refund</button>
-                  </form>
+                  <CancelReservationButton
+                    action={cancelReservation}
+                    reservationId={r.id}
+                    page={page}
+                    perPage={perPage}
+                    sort={sort}
+                    status={status}
+                    categoryId={categoryId || ''}
+                    q={q}
+                    disabled={r.status === 'REFUNDED' || r.status === 'CANCELED'}
+                  />
                 </td>
               </tr>
             ))}

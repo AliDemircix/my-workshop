@@ -5,8 +5,25 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import { formatEUR } from '@/lib/currency';
 import { sanitizeHtml } from '@/lib/sanitize';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Giftoria Workshops — Creative Epoxy Art Experiences',
+  description: 'Book hands-on epoxy art workshops in Amsterdam. All materials included. Perfect for beginners and experienced crafters. Small groups, expert guidance.',
+  openGraph: {
+    title: 'Giftoria Workshops — Creative Epoxy Art Experiences',
+    description: 'Book hands-on epoxy art workshops. All materials included, expert guidance, small groups.',
+    type: 'website',
+    locale: 'nl_NL',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Giftoria Workshops — Creative Epoxy Art Experiences',
+    description: 'Book hands-on epoxy art workshops. All materials included, expert guidance, small groups.',
+  },
+};
 
 export default async function HomePage() {
   // Fetch data for the home page
@@ -184,16 +201,19 @@ export default async function HomePage() {
           </div>
           
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => {
+            {categories.map((category, idx) => {
               const slug = category.slug || category.name.toLowerCase().replace(/\s+/g, '-');
               return (
                 <article key={category.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
                   <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                     {category.imageUrl ? (
-                      <img 
-                        src={category.imageUrl} 
-                        alt={category.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                      <img
+                        src={category.imageUrl}
+                        alt={(category as any).imageAlt || category.name}
+                        title={(category as any).imageTitle || undefined}
+                        loading={idx < 3 ? 'eager' : 'lazy'}
+                        decoding={idx < 3 ? 'sync' : 'async'}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">

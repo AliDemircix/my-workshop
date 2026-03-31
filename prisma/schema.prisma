@@ -109,6 +109,8 @@ model SiteSettings {
   address        String?
   kvk            String?
   iban           String?
+  // Announcement bar
+  announcementBar String? @default("Limited-time discounts available — book early to save!")
   // Branding
   logoUrl       String?
   sliderImages   SiteSliderImage[]

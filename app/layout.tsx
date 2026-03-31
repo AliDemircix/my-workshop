@@ -34,12 +34,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 </a>
                 <Nav isAdmin={isAdmin} />
               </div>
-              {/* Announcement bar for discounts/opportunities */}
-              <div className="bg-[#e9b306] text-black">
-                <div className="max-w-7xl mx-auto px-4 py-1 text-center text-xs sm:text-sm font-medium">
-                  Limited-time discounts available — book early to save!
+              {/* Announcement bar — admin-editable */}
+              {((settings as any)?.announcementBar ?? 'Limited-time discounts available — book early to save!') && (
+                <div className="bg-[#e9b306] text-black">
+                  <div className="max-w-7xl mx-auto px-4 py-1 text-center text-xs sm:text-sm font-medium">
+                    {(settings as any)?.announcementBar ?? 'Limited-time discounts available — book early to save!'}
+                  </div>
                 </div>
-              </div>
+              )}
             </header>
 
             <main className="flex-1">
