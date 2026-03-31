@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
 import EditorField from '@/components/admin/EditorField';
 import ClientOnly from '@/components/ClientOnly';
+import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
@@ -11,7 +12,7 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
   const id = Number(params.id);
   if (!id) return notFound();
 
-  const category = await prisma.category.findUnique({ where: { id } });
+  const category = await (prisma.category as any).findUnique({ where: { id } });
   if (!category) return notFound();
 
   async function updateCategory(formData: FormData) {
@@ -28,18 +29,18 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
           transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) }
         }).trim()
       : null;
-    const imageUrl = String(formData.get('imageUrl') || '').trim() || null;
+    const imageUrl      = String(formData.get('imageUrl')      || '').trim() || null;
+    const imageAlt      = String(formData.get('imageAlt')      || '').trim() || null;
+    const imageCaption  = String(formData.get('imageCaption')  || '').trim() || null;
+    const imageTitle    = String(formData.get('imageTitle')    || '').trim() || null;
     if (!name) return;
-    // Compute slug if needed (name changed or slug missing), ensure uniqueness
-  let nextSlug: string | null | undefined = (category as any).slug ?? null;
-  if (!nextSlug || name !== (category as any).name) {
+
+    let nextSlug: string | null = category.slug ?? null;
+    if (!nextSlug || name !== category.name) {
       const base = slugify(name);
-      let candidate = base || null;
+      let candidate: string | null = base || null;
       if (candidate) {
         let suffix = 1;
-        // ensure not used by other categories
-        // use findFirst to avoid strict unique type requirements
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           const existing = await (prisma.category as any).findFirst({ where: { slug: candidate } });
           if (!existing || existing.id === id) break;
@@ -49,33 +50,98 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
       }
       nextSlug = candidate;
     }
-    await prisma.category.update({ where: { id }, data: ({ name, description, imageUrl, slug: nextSlug } as any) });
+
+    await (prisma.category as any).update({
+      where: { id },
+      data: { name, description, imageUrl, imageAlt, imageCaption, imageTitle, slug: nextSlug },
+    });
     revalidatePath('/admin/categories');
     redirect('/admin/categories');
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Edit Category</h2>
-      <form action={updateCategory} className="space-y-4 border rounded p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
-          <div className="md:col-span-1">
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input className="border rounded px-3 py-2 w-full" name="name" defaultValue={category.name} />
+      <div className="border-b border-gray-200 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">Edit Category</h1>
+        <p className="text-gray-600 mt-1">{category.name}</p>
+      </div>
+
+      <form action={updateCategory} className="space-y-6 border rounded p-6 bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* Left: image upload */}
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">Category Image</label>
+            <ClientOnly>
+              <CategoryImageUploader
+                initialUrl={category.imageUrl}
+                categoryName={category.name}
+              />
+            </ClientOnly>
           </div>
-          <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Image URL</label>
-          <input className="border rounded px-3 py-2 w-full" name="imageUrl" defaultValue={category.imageUrl ?? ''} />
+
+          {/* Right: name + SEO fields */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                name="name"
+                defaultValue={category.name}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image Alt Text <span className="text-xs text-gray-400">(SEO — describes the image for search engines)</span>
+              </label>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                name="imageAlt"
+                defaultValue={category.imageAlt ?? ''}
+                placeholder="e.g. Colourful epoxy resin pour workshop"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image Title <span className="text-xs text-gray-400">(shown as tooltip on hover)</span>
+              </label>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                name="imageTitle"
+                defaultValue={category.imageTitle ?? ''}
+                placeholder="e.g. Epoxy Pour Workshop — Giftoria"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Image Caption <span className="text-xs text-gray-400">(shown below image on the public page)</span>
+              </label>
+              <input
+                className="border rounded px-3 py-2 w-full"
+                name="imageCaption"
+                defaultValue={category.imageCaption ?? ''}
+                placeholder="e.g. Participants creating epoxy art"
+              />
+            </div>
           </div>
         </div>
+
         <div>
           <ClientOnly>
-            <EditorField name="description" label="Description" defaultValue={category.description ?? ''} placeholder="Write a description..." />
+            <EditorField
+              name="description"
+              label="Description"
+              defaultValue={category.description ?? ''}
+              placeholder="Write a description..."
+            />
           </ClientOnly>
         </div>
-        <div className="flex gap-2">
-          <button className="bg-gray-900 text-white rounded px-4 py-2">Save</button>
-          <a href="/admin/categories" className="underline">Cancel</a>
+
+        <div className="flex gap-3 pt-2 border-t">
+          <button className="bg-gray-900 text-white rounded px-4 py-2">Save Changes</button>
+          <a href="/admin/categories" className="underline text-gray-600 self-center">Cancel</a>
         </div>
       </form>
     </div>

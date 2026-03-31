@@ -12,18 +12,19 @@ export async function POST(req: NextRequest) {
 
   const { url } = await req.json() as { url: string };
 
-  // Only allow deleting from our uploads folder
-  if (!url || !url.startsWith('/uploads/slider/')) {
+  // Only allow deleting from our managed upload folders
+  if (!url || !/^\/uploads\/(slider|categories)\//.test(url)) {
     return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 
-  // Strip query params / traversal attempts
-  const filename = url.split('/').pop()?.split('?')[0] ?? '';
+  const parts = url.split('/');
+  const folder = parts[2];
+  const filename = parts[3]?.split('?')[0] ?? '';
   if (!filename || filename.includes('..')) {
     return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
   }
 
-  const filePath = join(process.cwd(), 'public', 'uploads', 'slider', filename);
+  const filePath = join(process.cwd(), 'public', 'uploads', folder, filename);
   try {
     await unlink(filePath);
   } catch {

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import EditorField from '@/components/admin/EditorField';
 import ClientOnly from '@/components/ClientOnly';
+import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
@@ -25,6 +26,9 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
         }).trim()
       : null;
     const imageUrl = String(formData.get('imageUrl') || '').trim() || null;
+    const imageAlt = String(formData.get('imageAlt') || '').trim() || null;
+    const imageCaption = String(formData.get('imageCaption') || '').trim() || null;
+    const imageTitle = String(formData.get('imageTitle') || '').trim() || null;
     if (!name) return;
     // Ensure unique slug
     const base = slugify(name);
@@ -36,7 +40,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
         candidate = `${base}-${suffix}`;
       }
     }
-    await prisma.category.create({ data: ({ name, slug: candidate, description, imageUrl } as any) });
+    await prisma.category.create({ data: ({ name, slug: candidate, description, imageUrl, imageAlt, imageCaption, imageTitle } as any) });
     revalidatePath('/admin/categories');
     redirect('/admin/categories');
   }
@@ -75,23 +79,43 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Add New Category</h2>
         <form action={createCategory} className="space-y-4 border rounded p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
-          <div className="md:col-span-1">
-            <input className="border rounded px-3 py-2 w-full" name="name" placeholder="Category name" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            {/* Left: image upload */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Category Image</label>
+              <ClientOnly>
+                <CategoryImageUploader />
+              </ClientOnly>
+            </div>
+            {/* Right: name + SEO fields */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category Name <span className="text-red-500">*</span></label>
+                <input className="border rounded px-3 py-2 w-full" name="name" placeholder="e.g. Epoxy Pour Workshop" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image Alt Text <span className="text-xs text-gray-400">(SEO)</span></label>
+                <input className="border rounded px-3 py-2 w-full" name="imageAlt" placeholder="e.g. Colourful epoxy resin pour workshop" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image Title <span className="text-xs text-gray-400">(tooltip on hover)</span></label>
+                <input className="border rounded px-3 py-2 w-full" name="imageTitle" placeholder="e.g. Epoxy Pour Workshop — Giftoria" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image Caption <span className="text-xs text-gray-400">(shown below image)</span></label>
+                <input className="border rounded px-3 py-2 w-full" name="imageCaption" placeholder="e.g. Participants creating epoxy art" />
+              </div>
+            </div>
           </div>
-          <div className="md:col-span-2">
-            <input className="border rounded px-3 py-2 w-full" name="imageUrl" placeholder="Image URL (optional)" />
+          <div>
+            <ClientOnly>
+              <EditorField name="description" label="Description (optional)" placeholder="Write a description..." />
+            </ClientOnly>
           </div>
-        </div>
-        <div>
-          <ClientOnly>
-            <EditorField name="description" label="Description (optional)" placeholder="Write a description..." />
-          </ClientOnly>
-        </div>
-        <div>
-          <button className="bg-gray-900 text-white rounded px-4 py-2">Add</button>
-        </div>
-      </form>
+          <div>
+            <button className="bg-gray-900 text-white rounded px-4 py-2">Add Category</button>
+          </div>
+        </form>
 
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
