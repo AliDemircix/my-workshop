@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import WorkshopsToast from '@/components/admin/WorkshopsToast';
 import AddWorkshopDialog from '@/components/admin/AddWorkshopDialog';
+import { requireAdminAction } from '@/lib/auth';
 
 export default async function WorkshopsPage({ searchParams }: { searchParams?: { error?: string; page?: string } }) {
   const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
@@ -15,6 +16,7 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
 
   async function createSession(formData: FormData) {
     'use server';
+    requireAdminAction();
     const categoryId = Number(formData.get('categoryId'));
     const dateStr = String(formData.get('date') || '').trim(); // yyyy-MM-dd
     const startStr = String(formData.get('startTime') || '').trim(); // HH:mm
@@ -54,6 +56,7 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
 
   async function deleteSession(formData: FormData) {
     'use server';
+    requireAdminAction();
     const id = Number(formData.get('id'));
     const page = Number(formData.get('page') || 1);
     if (!id) {

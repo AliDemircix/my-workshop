@@ -1,29 +1,43 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addMonths, format, startOfMonth } from 'date-fns';
+import { parseISO, startOfDay, startOfMonth } from 'date-fns';
 import ReservationSidebar from './ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
 
 type Category = { id: number; name: string };
 type CategoryWithMeta = { id: number; name: string; slug?: string | null; description?: string | null; imageUrl?: string | null; longDescription?: string | null };
 
-export default function ReservationFlow() {
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+export default function ReservationFlow({
+  initialCategoryId,
+  initialDate,
+}: {
+  initialCategoryId?: number;
+  initialDate?: string;
+}) {
+  const [categoryId, setCategoryId] = useState<number | null>(initialCategoryId ?? null);
 
   const { data: categories } = useQuery<CategoryWithMeta[]>({
     queryKey: ['categories'],
     queryFn: async () => (await fetch('/api/categories')).json(),
   });
 
-  // Select the first category by default when categories load
+  // Auto-select first category only when no initial category was provided via URL
   useEffect(() => {
-    if (!categoryId && categories && categories.length > 0) {
+    if (!initialCategoryId && !categoryId && categories && categories.length > 0) {
       setCategoryId(categories[0].id);
     }
-  }, [categories, categoryId]);
+  }, [categories, categoryId, initialCategoryId]);
 
-  const [viewDate, setViewDate] = useState<Date>(startOfMonth(new Date()));
+  const initialViewDate = initialDate
+    ? startOfMonth(parseISO(initialDate))
+    : startOfMonth(new Date());
+  const [viewDate, setViewDate] = useState<Date>(initialViewDate);
+
+  // Convert "yyyy-MM-dd" URL param to the same key format the Calendar and availability API use
+  const initialDateKey = initialDate
+    ? startOfDay(parseISO(initialDate)).toISOString()
+    : null;
   const { data: availability } = useQuery<any>({
     queryKey: ['availability', categoryId, viewDate.getMonth(), viewDate.getFullYear()],
     queryFn: async () =>
@@ -100,6 +114,7 @@ export default function ReservationFlow() {
                 availability={availability}
                 viewDate={viewDate}
                 setViewDate={(fn) => setViewDate(fn)}
+                initialDateKey={initialDateKey}
               />
             )}
           </div>

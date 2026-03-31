@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const isAdmin = isAdminAuthenticated();
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">

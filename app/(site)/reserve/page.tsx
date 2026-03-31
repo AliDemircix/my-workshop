@@ -1,7 +1,14 @@
 import ReservationFlow from '@/components/reservation/ReservationFlow';
 import Link from 'next/link';
 
-export default function ReservePage() {
+export default function ReservePage({
+  searchParams,
+}: {
+  searchParams: { categoryId?: string; date?: string };
+}) {
+  const initialCategoryId = searchParams.categoryId ? Number(searchParams.categoryId) : undefined;
+  const initialDate = searchParams.date; // "yyyy-MM-dd" or undefined
+
   return (
     <main className="space-y-6">
       {/* Breadcrumb */}
@@ -22,7 +29,7 @@ export default function ReservePage() {
       </div>
 
       <div className="h-px bg-gray-200" />
-      <ReservationFlow />
+      <ReservationFlow initialCategoryId={initialCategoryId} initialDate={initialDate} />
     </main>
   );
 }

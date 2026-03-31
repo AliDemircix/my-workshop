@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Slider from '@/components/Slider';
 import Testimonials from '@/components/Testimonials';
+import FAQ from '@/components/FAQ';
 import { formatEUR } from '@/lib/currency';
 import { sanitizeHtml } from '@/lib/sanitize';
 
@@ -145,8 +146,8 @@ export default async function HomePage() {
                       </div>
                     </div>
                     
-                    <Link 
-                      href="/reserve"
+                    <Link
+                      href={`/reserve?categoryId=${session.category.id}&date=${session.date.getFullYear()}-${String(session.date.getMonth() + 1).padStart(2, '0')}-${String(session.date.getDate()).padStart(2, '0')}`}
                       className="block w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-center font-semibold py-3 rounded-lg transition-all duration-300"
                     >
                       Book Now
@@ -224,8 +225,8 @@ export default async function HomePage() {
                       >
                         Learn More
                       </Link>
-                      <Link 
-                        href="/reserve" 
+                      <Link
+                        href={`/reserve?categoryId=${category.id}`}
                         className="flex-1 text-center bg-[#c99706] hover:bg-[#b8860b] text-white rounded-lg px-4 py-2 font-semibold transition-all duration-300"
                       >
                         Book Now
@@ -308,6 +309,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQ limit={5} />
 
       {/* Testimonials Section */}
       <Testimonials />

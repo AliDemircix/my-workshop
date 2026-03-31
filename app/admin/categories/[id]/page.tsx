@@ -5,6 +5,7 @@ import EditorField from '@/components/admin/EditorField';
 import ClientOnly from '@/components/ClientOnly';
 import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
+import { requireAdminAction } from '@/lib/auth';
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
@@ -15,6 +16,7 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
 
   async function updateCategory(formData: FormData) {
     'use server';
+    requireAdminAction();
     const name = String(formData.get('name') || '').trim();
     const rawDescription = String(formData.get('description') || '').trim();
     const description = rawDescription

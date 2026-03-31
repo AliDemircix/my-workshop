@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
+import { checkRateLimit, getIpFromRequest } from '@/lib/rateLimit';
+
+// 10 requests per hour per IP
+const CHECKOUT_LIMIT = 10;
+const CHECKOUT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(req: NextRequest) {
+  const ip = getIpFromRequest(req);
+  const rateLimitResult = checkRateLimit(ip, 'checkout', CHECKOUT_LIMIT, CHECKOUT_WINDOW_MS);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimitResult.retryAfterSeconds),
+          'X-RateLimit-Limit': String(CHECKOUT_LIMIT),
+          'X-RateLimit-Window': '3600',
+        },
+      },
+    );
+  }
+
   const { reservationId } = await req.json();
   const reservation = await prisma.reservation.findUnique({
     where: { id: reservationId },

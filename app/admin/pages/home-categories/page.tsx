@@ -6,12 +6,14 @@ import EditorField from '@/components/admin/EditorField';
 import sanitizeHtml from 'sanitize-html';
 import HomeCategoriesTabs from '../../../../components/admin/HomeCategoriesTabs';
 import PolicyToast from '@/components/admin/PolicyToast';
+import { requireAdminAction } from '@/lib/auth';
 
 export default async function HomeCategoriesPage() {
   const categories = (await prisma.category.findMany({ orderBy: { name: 'asc' } })) as any[];
 
   async function save(formData: FormData) {
     'use server';
+    requireAdminAction();
     const id = Number(formData.get('id'));
     const imageUrl = String(formData.get('imageUrl') || '').trim() || null;
     const shortRaw = String(formData.get('shortDescription') || '').trim();

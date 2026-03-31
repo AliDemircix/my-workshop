@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
+import { requireAdminAction } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -40,6 +41,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
   const skip = (page - 1) * perPage;
   async function cancelReservation(formData: FormData) {
     'use server';
+    requireAdminAction();
     const id = Number(formData.get('id'));
   const pageOnSubmit = Number(formData.get('page')) || 1;
   const perPageOnSubmit = Number(formData.get('perPage')) || 20;

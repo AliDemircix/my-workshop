@@ -3,6 +3,7 @@ import { sendMail } from '@/lib/mailer';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { checkRateLimit, getIpFromRequest } from '@/lib/rateLimit';
 
 const CreateSchema = z.object({
   sessionId: z.number(),
@@ -11,7 +12,27 @@ const CreateSchema = z.object({
   quantity: z.number().int().min(1).max(10),
 });
 
+// 10 requests per hour per IP
+const RESERVATIONS_LIMIT = 10;
+const RESERVATIONS_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 export async function POST(req: NextRequest) {
+  const ip = getIpFromRequest(req);
+  const rateLimitResult = checkRateLimit(ip, 'reservations', RESERVATIONS_LIMIT, RESERVATIONS_WINDOW_MS);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimitResult.retryAfterSeconds),
+          'X-RateLimit-Limit': String(RESERVATIONS_LIMIT),
+          'X-RateLimit-Window': '3600',
+        },
+      },
+    );
+  }
+
   const json = await req.json();
   const parsed = CreateSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

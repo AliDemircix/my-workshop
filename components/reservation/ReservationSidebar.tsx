@@ -9,12 +9,14 @@ export default function ReservationSidebar({
   availability,
   viewDate,
   setViewDate,
+  initialDateKey,
 }: {
   availability: any | null;
   viewDate: Date;
   setViewDate: (d: (d: Date) => Date) => void;
+  initialDateKey?: string | null;
 }) {
-  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(initialDateKey ?? null);
   const [selectedTimeslotId, setSelectedTimeslotId] = useState<number | null>(null);
 
   const dates = useMemo(() => (availability ? Object.keys(availability) : []), [availability]);

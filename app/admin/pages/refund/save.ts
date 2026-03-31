@@ -3,8 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sanitizeHtml from 'sanitize-html';
+import { requireAdminAction } from '@/lib/auth';
 
 export async function saveRefund(formData: FormData) {
+  requireAdminAction();
   const raw = String(formData.get('refundContent') ?? '');
   const content = sanitizeHtml(raw, {
     allowedTags: [

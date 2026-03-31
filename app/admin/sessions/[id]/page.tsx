@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
+import { requireAdminAction } from '@/lib/auth';
 
 function toInputDate(d: Date) {
   const dt = new Date(d);
@@ -27,6 +28,7 @@ export default async function EditSessionPage({ params }: { params: { id: string
 
   async function updateSession(formData: FormData) {
     'use server';
+    requireAdminAction();
     const categoryId = Number(formData.get('categoryId'));
     const dateStr = String(formData.get('date') || ''); // yyyy-MM-dd
     const startStr = String(formData.get('startTime') || ''); // HH:mm

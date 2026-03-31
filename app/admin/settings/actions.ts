@@ -2,8 +2,10 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { requireAdminAction } from '@/lib/auth';
 
 export async function saveSettings(formData: FormData) {
+  requireAdminAction();
   const get = (k: string) => String(formData.get(k) ?? '').trim();
   const getAll = (k: string) => formData.getAll(k).map((v) => String(v ?? '').trim());
   // Trim all inputs and coerce sensible defaults for policy items

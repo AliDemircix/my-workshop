@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 const faqs = [
   {
@@ -45,16 +46,18 @@ const faqs = [
   }
 ];
 
-export default function FAQ() {
+export default function FAQ({ limit }: { limit?: number } = {}) {
   const [openItems, setOpenItems] = useState<number[]>([]);
 
   const toggleItem = (id: number) => {
-    setOpenItems(prev => 
-      prev.includes(id) 
+    setOpenItems(prev =>
+      prev.includes(id)
         ? prev.filter(item => item !== id)
         : [...prev, id]
     );
   };
+
+  const visibleFaqs = limit ? faqs.slice(0, limit) : faqs;
 
   return (
     <section className="space-y-8">
@@ -64,9 +67,9 @@ export default function FAQ() {
           Got questions? We've got answers! Here are the most common questions about our workshops.
         </p>
       </div>
-      
+
       <div className="max-w-3xl mx-auto space-y-4">
-        {faqs.map((faq) => (
+        {visibleFaqs.map((faq) => (
           <div 
             key={faq.id} 
             className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-300"
@@ -107,25 +110,37 @@ export default function FAQ() {
         ))}
       </div>
       
-      <div className="text-center bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Still have questions?
-        </h3>
-        <p className="text-gray-600 mb-4">
-          We're here to help! Don't hesitate to reach out with any questions.
-        </p>
-        <a 
-          href="https://giftoria.nl/contact-us"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300"
-        >
-          Contact Us
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </a>
-      </div>
+      {limit && faqs.length > limit ? (
+        <div className="text-center">
+          <Link
+            href="/faq"
+            className="inline-flex items-center gap-2 text-[#c99706] hover:text-[#b8860b] font-semibold text-lg underline underline-offset-4 transition-colors"
+          >
+            View all {faqs.length} questions
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </Link>
+        </div>
+      ) : (
+        <div className="text-center bg-gray-50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Still have questions?</h3>
+          <p className="text-gray-600 mb-4">
+            We're here to help! Don't hesitate to reach out with any questions.
+          </p>
+          <a
+            href="https://giftoria.nl/contact-us"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300"
+          >
+            Contact Us
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+      )}
     </section>
   );
 }
