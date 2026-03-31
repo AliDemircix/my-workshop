@@ -12,13 +12,14 @@ generator client {
 model Category {
   id        Int       @id @default(autoincrement())
   name      String    @unique
-  description String? 
+  description String?
   imageUrl   String?
   slug       String?  @unique
   longDescription String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   sessions  Session[]
+  giftCards GiftCard[]
 }
 
 model Session {
@@ -50,6 +51,36 @@ model Reservation {
   updatedAt                 DateTime  @updatedAt
   canceledAt                DateTime?
   refundId                  String?
+}
+
+model GiftVoucher {
+  id                      Int       @id @default(autoincrement())
+  code                    String    @unique
+  amountCents             Int
+  giftCardId              Int?
+  purchaserName           String
+  purchaserEmail          String
+  recipientEmail          String?
+  status                  String    @default("PENDING") // PENDING | PAID | USED | EXPIRED
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  redeemedByReservationId Int?
+  expiresAt               DateTime
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model GiftCard {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  priceCents  Int
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  imageUrl    String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Global site settings (single row with id=1)

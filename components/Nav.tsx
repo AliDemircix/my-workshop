@@ -33,6 +33,13 @@ export default function Nav({ isAdmin = false }: Props) {
         Home
       </Link>
       <Link
+        className={clsx(base, isActive('/gift-voucher') ? active : inactive)}
+        href="/gift-voucher"
+        aria-current={isActive('/gift-voucher') ? 'page' : undefined}
+      >
+        Gift Cards
+      </Link>
+      <Link
         className="bg-[#c99706] hover:bg-[#b8860b] text-white px-4 py-2 rounded-md font-semibold transition-all duration-300 no-underline"
         href="/reserve"
       >

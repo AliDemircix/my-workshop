@@ -49,8 +49,8 @@ export default function ReservationFlow({
 
   return (
     <div className="w-full">
-      <div className="grid lg:grid-cols-4 gap-8">
-        {/* Left: Category info and image (3/4 width) */}
+      <div className="grid lg:grid-cols-5 gap-8">
+        {/* Left: Category info and image (3/5 width) */}
         <div className="lg:col-span-3 space-y-6">
           {categoryId && categories && (
             (() => {
@@ -86,8 +86,8 @@ export default function ReservationFlow({
           )}
         </div>
 
-        {/* Right: Booking sidebar (1/4 width) */}
-        <aside className="lg:col-span-1">
+        {/* Right: Booking sidebar (2/5 width) */}
+        <aside className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-lg border p-6 space-y-6 sticky top-6">
             <div>
               <label className="block text-sm font-semibold mb-3 text-gray-900">Choose Workshop Category</label>

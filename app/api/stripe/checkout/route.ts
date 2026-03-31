@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { reservationId } = await req.json();
+  const { reservationId, voucherCode } = await req.json();
   const reservation = await prisma.reservation.findUnique({
     where: { id: reservationId },
     include: { session: { include: { category: true } } },
@@ -32,12 +32,72 @@ export async function POST(req: NextRequest) {
   if (!reservation) return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
 
   const session = reservation.session;
+  const totalPrice = session.priceCents * reservation.quantity;
+
+  // ── Voucher redemption path ────────────────────────────────────────────────
+  if (typeof voucherCode === 'string' && voucherCode.trim().length > 0) {
+    const normalizedCode = voucherCode.trim().toUpperCase();
+    const voucher = await prisma.giftVoucher.findUnique({ where: { code: normalizedCode } });
+
+    if (!voucher || voucher.status !== 'PAID' || new Date(voucher.expiresAt) < new Date()) {
+      return NextResponse.json({ error: 'Invalid or expired voucher code' }, { status: 400 });
+    }
+
+    const discountCents = Math.min(voucher.amountCents, totalPrice);
+    const remainingCents = totalPrice - discountCents;
+
+    if (remainingCents === 0) {
+      // Voucher covers the full price — no Stripe session needed
+      await prisma.reservation.update({
+        where: { id: reservation.id },
+        data: { status: 'PAID' },
+      });
+      await prisma.giftVoucher.update({
+        where: { id: voucher.id },
+        data: { status: 'USED', redeemedByReservationId: reservation.id },
+      });
+      return NextResponse.json({ success: true, free: true });
+    }
+
+    // Voucher partially covers — charge the remainder via Stripe
+    const checkout = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/cancel`,
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `${session.category.name} ${new Date(session.date).toDateString()}`,
+              description: `Gift voucher applied: -€${(discountCents / 100).toFixed(2)}`,
+            },
+            unit_amount: remainingCents,
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        reservationId: String(reservation.id),
+        voucherCode: normalizedCode,
+      },
+    });
+
+    await prisma.reservation.update({
+      where: { id: reservation.id },
+      data: { stripeCheckoutSessionId: checkout.id },
+    });
+
+    return NextResponse.json({ url: checkout.url });
+  }
+
+  // ── Standard path (no voucher) ─────────────────────────────────────────────
   const unitAmount = session.priceCents;
 
   const checkout = await stripe.checkout.sessions.create({
     mode: 'payment',
-  success_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/success?session_id={CHECKOUT_SESSION_ID}`,
-  cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/cancel`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/cancel`,
     line_items: [
       {
         price_data: {

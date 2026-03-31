@@ -15,35 +15,100 @@ export async function POST(req: NextRequest) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as any;
-      const reservationId = Number(session.metadata?.reservationId);
-      if (reservationId) {
-        // Idempotency guard: check previous state
-        const existing = await prisma.reservation.findUnique({ where: { id: reservationId } });
-        const firstPaid = !(existing && existing.status === 'PAID' && existing.stripePaymentIntentId);
 
-        const updated = await prisma.reservation.update({
-          where: { id: reservationId },
-          data: { status: 'PAID', stripePaymentIntentId: session.payment_intent as string },
-        });
+      // ── Gift voucher purchase ────────────────────────────────────────────────
+      if (session.metadata?.type === 'gift_voucher') {
+        const giftVoucherId = Number(session.metadata?.giftVoucherId);
+        if (giftVoucherId) {
+          const existing = await prisma.giftVoucher.findUnique({ where: { id: giftVoucherId } });
+          const firstPaid = !(existing && existing.status === 'PAID' && existing.stripePaymentIntentId);
 
-        // Fire-and-forget email confirmation (best-effort) only once
-        if (firstPaid && hasSmtpConfig()) {
-          const sessionDb = await prisma.session.findUnique({
-            where: { id: updated.sessionId },
-            include: { category: true },
+          const voucher = await prisma.giftVoucher.update({
+            where: { id: giftVoucherId },
+            data: {
+              status: 'PAID',
+              stripePaymentIntentId: session.payment_intent as string,
+            },
           });
-          const when = sessionDb ? new Date(sessionDb.date) : null;
-          const subject = `Your reservation is confirmed`;
-          const html = `
-            <p>Hi ${updated.name},</p>
-            <p>Thanks for your payment. Your reservation is confirmed.</p>
-            ${sessionDb ? `<p><strong>Workshop:</strong> ${sessionDb.category.name}</p>
-            <p><strong>Date:</strong> ${when?.toDateString()}</p>` : ''}
-            <p><strong>Participants:</strong> ${updated.quantity}</p>
-            <p>We look forward to seeing you!</p>
-          `;
-          // Don't block the webhook response on mail send
-          sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err));
+
+          if (firstPaid && hasSmtpConfig()) {
+            const amountLabel = `€${(voucher.amountCents / 100).toFixed(2)}`;
+            const expiryLabel = new Date(voucher.expiresAt).toDateString();
+
+            // Confirmation to purchaser
+            const purchaserSubject = 'Your gift voucher is ready!';
+            const purchaserHtml = `
+              <p>Hi ${voucher.purchaserName},</p>
+              <p>Thank you for purchasing a gift voucher. Here are the details:</p>
+              <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${voucher.code}</span></p>
+              <p><strong>Value:</strong> ${amountLabel}</p>
+              <p><strong>Valid Until:</strong> ${expiryLabel}</p>
+              <p>This voucher can be applied at checkout when booking a workshop.</p>
+              <p>Enjoy!</p>
+            `;
+            sendMail({ to: voucher.purchaserEmail, subject: purchaserSubject, html: purchaserHtml }).catch((err) =>
+              console.error('Gift voucher purchaser email failed', err),
+            );
+
+            // Gift email to recipient if set
+            if (voucher.recipientEmail) {
+              const recipientSubject = `You've received a gift voucher!`;
+              const recipientHtml = `
+                <p>Hi there,</p>
+                <p>${voucher.purchaserName} has sent you a gift voucher for a workshop!</p>
+                <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${voucher.code}</span></p>
+                <p><strong>Value:</strong> ${amountLabel}</p>
+                <p><strong>Valid Until:</strong> ${expiryLabel}</p>
+                <p>Use this code at checkout when booking your workshop.</p>
+                <p>Enjoy!</p>
+              `;
+              sendMail({ to: voucher.recipientEmail, subject: recipientSubject, html: recipientHtml }).catch((err) =>
+                console.error('Gift voucher recipient email failed', err),
+              );
+            }
+          }
+        }
+      } else {
+        // ── Workshop reservation payment ───────────────────────────────────────
+        const reservationId = Number(session.metadata?.reservationId);
+        if (reservationId) {
+          // Idempotency guard: check previous state
+          const existing = await prisma.reservation.findUnique({ where: { id: reservationId } });
+          const firstPaid = !(existing && existing.status === 'PAID' && existing.stripePaymentIntentId);
+
+          const updated = await prisma.reservation.update({
+            where: { id: reservationId },
+            data: { status: 'PAID', stripePaymentIntentId: session.payment_intent as string },
+          });
+
+          // Mark voucher as USED if one was applied as partial payment
+          const voucherCode = session.metadata?.voucherCode as string | undefined;
+          if (voucherCode) {
+            await prisma.giftVoucher.updateMany({
+              where: { code: voucherCode, status: 'PAID' },
+              data: { status: 'USED', redeemedByReservationId: reservationId },
+            });
+          }
+
+          // Fire-and-forget email confirmation (best-effort) only once
+          if (firstPaid && hasSmtpConfig()) {
+            const sessionDb = await prisma.session.findUnique({
+              where: { id: updated.sessionId },
+              include: { category: true },
+            });
+            const when = sessionDb ? new Date(sessionDb.date) : null;
+            const subject = `Your reservation is confirmed`;
+            const html = `
+              <p>Hi ${updated.name},</p>
+              <p>Thanks for your payment. Your reservation is confirmed.</p>
+              ${sessionDb ? `<p><strong>Workshop:</strong> ${sessionDb.category.name}</p>
+              <p><strong>Date:</strong> ${when?.toDateString()}</p>` : ''}
+              <p><strong>Participants:</strong> ${updated.quantity}</p>
+              <p>We look forward to seeing you!</p>
+            `;
+            // Don't block the webhook response on mail send
+            sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err));
+          }
         }
       }
     }

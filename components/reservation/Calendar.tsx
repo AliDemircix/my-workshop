@@ -47,8 +47,8 @@ export default function Calendar({
               className={[
                 'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200',
                 inMonth ? '' : 'opacity-40',
-                canSelect 
-                  ? 'border-gray-200 hover:border-orange-400 hover:bg-orange-50 bg-white' 
+                canSelect
+                  ? 'border-orange-400 text-orange-600 hover:bg-orange-50 bg-white'
                   : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed',
                 isSelected ? 'bg-orange-50 border-orange-500 text-orange-600 font-bold shadow-md' : '',
                 isPastDate ? 'opacity-50 line-through' : '',
