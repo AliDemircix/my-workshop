@@ -31,7 +31,7 @@ export async function saveSettings(formData: FormData) {
   // Page URLs are hard-coded as above; no normalization required
 
   // Normalize social URLs: if provided without scheme, prefix with https://
-  const addHttps = (v: string) => (v && !/^https?:\/\//.test(v) ? `https://${v}` : v);
+  const addHttps = (v: string) => (v && !/^(?:https?:\/\/|\/)/.test(v) ? `https://${v}` : v);
   data.facebookUrl = addHttps(data.facebookUrl);
   data.instagramUrl = addHttps(data.instagramUrl);
   data.youtubeUrl = addHttps(data.youtubeUrl);
