@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { requireAdmin } from '@/lib/auth';
+import { slugify } from '@/lib/slug';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE_BYTES = 4 * 1024 * 1024; // 4 MB
+const ALLOWED_FOLDERS = ['slider', 'categories'] as const;
+type Folder = (typeof ALLOWED_FOLDERS)[number];
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +18,8 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
+  const rawFolder = (formData.get('folder') as string | null) ?? 'slider';
+  const rawName = (formData.get('name') as string | null) ?? '';
 
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -26,13 +31,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File size must be under 4 MB' }, { status: 400 });
   }
 
+  const folder: Folder = ALLOWED_FOLDERS.includes(rawFolder as Folder)
+    ? (rawFolder as Folder)
+    : 'slider';
+
   const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const uploadDir = join(process.cwd(), 'public', 'uploads', 'slider');
+
+  // SEO-friendly filename: slugified name + timestamp
+  const namePart = rawName ? slugify(rawName) : '';
+  const filename = namePart
+    ? `${namePart}-${Date.now()}.${ext}`
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
+  await mkdir(uploadDir, { recursive: true });
   const filePath = join(uploadDir, filename);
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(filePath, buffer);
 
-  return NextResponse.json({ url: `/uploads/slider/${filename}` });
+  return NextResponse.json({ url: `/uploads/${folder}/${filename}` });
 }

@@ -10,16 +10,19 @@ generator client {
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  description String?
-  imageUrl   String?
-  slug       String?  @unique
+  id              Int        @id @default(autoincrement())
+  name            String     @unique
+  description     String?
+  imageUrl        String?
+  imageAlt        String?
+  imageCaption    String?
+  imageTitle      String?
+  slug            String?    @unique
   longDescription String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  sessions  Session[]
-  giftCards GiftCard[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  sessions        Session[]
+  giftCards       GiftCard[]
 }
 
 model Session {

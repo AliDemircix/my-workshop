@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ClientOnly from '@/components/ClientOnly';
 import EditorField from '@/components/admin/EditorField';
+import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 
 type Category = {
   id: number;
@@ -53,10 +54,14 @@ export default function HomeCategoriesTabs({ categories, save }: Props) {
           <form key={active.id} action={save} className="space-y-4">
             <input type="hidden" name="id" value={active.id} />
 
-            {/* Image URL */}
+            {/* Image upload */}
             <div>
-              <label className="block text-sm font-medium mb-1">Image URL</label>
-              <input key={`img-${active.id}`} className="border rounded px-3 py-2 w-full" name="imageUrl" defaultValue={active.imageUrl ?? ''} placeholder="https://..." />
+              <label className="block text-sm font-medium mb-1">Category Image</label>
+              <CategoryImageUploader
+                key={`img-${active.id}`}
+                initialUrl={active.imageUrl}
+                categoryName={active.name}
+              />
             </div>
 
             {/* Short Description (home) */}
