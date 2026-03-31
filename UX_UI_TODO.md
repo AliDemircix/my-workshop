@@ -59,17 +59,48 @@
 
 ---
 
+## Category Image Uploader (New)
+
+- [ ] **31. Add client-side file pre-validation** in `components/admin/CategoryImageUploader.tsx` — no format/size check before upload; hint copy also excludes GIF as a valid type.
+- [ ] **32. Fix remove button visibility on touch/keyboard** in `CategoryImageUploader.tsx` — the remove `×` button only appears on hover, making it inaccessible on mobile and via keyboard.
+- [ ] **33. Warn before abandoning the create-category form when an image is already uploaded** — `app/admin/categories/page.tsx` + `CategoryImageUploader.tsx` — navigating away orphans the uploaded file on disk.
+- [ ] **34. Delete the previous image file when replacing it** in `CategoryImageUploader.tsx` — uploading a new image does not call the delete API for the old one, leaving orphaned files.
+- [ ] **35. Add success toast/feedback after saving an edited category** in `app/admin/categories/[id]/page.tsx` — the form silently reloads with no confirmation that the save worked.
+- [ ] **36. Add `focus-visible` ring styles to all category and session form inputs** in `app/admin/categories/[id]/page.tsx`, `categories/page.tsx`, and session edit pages — inputs have no visible focus indicator.
+- [ ] **37. Fix broken HTML nesting** in `app/admin/categories/page.tsx` — the categories list is nested inside the "Add Category" `<form>` element, making all list action buttons implicit form submits.
+- [ ] **38. Wrap `CategoryImageUploader` in `ClientOnly`** inside `components/admin/HomeCategoriesTabs.tsx` — the uploader uses browser APIs that can cause SSR hydration mismatches.
+- [ ] **45. Add error handling to `removeImage`** in `CategoryImageUploader.tsx` — if the delete API returns an error, the function still clears the URL in state, silently orphaning the file on disk.
+
+---
+
+## Admin Panel (New)
+
+- [ ] **39. Fix admin sidebar responsiveness** in `app/admin/layout.tsx` — the sidebar does not collapse below ~900px wide, causing the main content to be unusable on smaller screens.
+- [ ] **40. Fix `ConfirmDialog` accessibility** in `components/admin/ConfirmDialog.tsx` — missing `aria-labelledby`, `aria-describedby`, and a focus trap; screen readers and keyboard users cannot use the modal correctly.
+- [ ] **42. Disable save button during submission** in `app/admin/categories/[id]/page.tsx` and all other admin forms — the button stays interactive during the server round-trip, allowing duplicate submissions. Create a shared `<SubmitButton>` using `useFormStatus`.
+- [ ] **43. Hide table headers and count when categories list is empty** in `app/admin/categories/page.tsx` — "Total categories: 0" and empty column headers render alongside the empty-state illustration, making the page look broken.
+- [ ] **44. Fix active tab indicator in `HomeCategoriesTabs`** in `components/admin/HomeCategoriesTabs.tsx` — the active tab is visually identical to a hovered inactive tab (`bg-gray-50`); add a brand-colored bottom border to distinguish it.
+
+---
+
+## Content & Config (New)
+
+- [ ] **41. Replace URL text input with image uploader on gift card admin page** in `app/admin/gift-cards/page.tsx` — gift card images still use a plain URL input field, inconsistent with the new category image upload pattern.
+
+---
+
 ## Summary
 
 | Category | Items | Count |
 |---|---|---|
 | Reservation flow UX | 2, 3, 4, 7, 8, 9 | 6 |
-| Accessibility (ARIA, focus, labels) | 5, 6, 24, 25, 27 | 5 |
-| Admin panel UX | 14–23 | 10 |
+| Accessibility (ARIA, focus, labels) | 5, 6, 24, 25, 27, 32, 36, 40 | 8 |
+| Admin panel UX | 14–23, 39, 40, 42, 43, 44 | 15 |
+| Category Image Uploader | 31, 32, 33, 34, 35, 36, 37, 38, 45 | 9 |
 | Performance & CLS | 10, 26, 30 | 3 |
-| Content & SEO | 1, 11, 28, 29 | 4 |
+| Content & SEO | 1, 11, 28, 29, 41 | 5 |
 | Component polish | 12, 13 | 2 |
-| **Total** | | **30** |
+| **Total** | | **45** |
 
 ---
 
