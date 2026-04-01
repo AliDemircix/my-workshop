@@ -1,12 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
-import EditorField from '@/components/admin/EditorField';
-import ClientOnly from '@/components/ClientOnly';
-import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
+import EditCategoryForm from '@/components/admin/EditCategoryForm';
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
@@ -56,7 +54,8 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
       data: { name, description, imageUrl, imageAlt, imageCaption, imageTitle, slug: nextSlug },
     });
     revalidatePath('/admin/categories');
-    redirect('/admin/categories');
+    // Return to categories list — the client form will show a success toast
+    // before navigating (task 35).
   }
 
   return (
@@ -66,84 +65,12 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
         <p className="text-gray-600 mt-1">{category.name}</p>
       </div>
 
-      <form action={updateCategory} className="space-y-6 border rounded p-6 bg-white">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* Left: image upload */}
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Category Image</label>
-            <ClientOnly>
-              <CategoryImageUploader
-                initialUrl={category.imageUrl}
-                categoryName={category.name}
-              />
-            </ClientOnly>
-          </div>
-
-          {/* Right: name + SEO fields */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full"
-                name="name"
-                defaultValue={category.name}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Alt Text <span className="text-xs text-gray-400">(SEO — describes the image for search engines)</span>
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full"
-                name="imageAlt"
-                defaultValue={category.imageAlt ?? ''}
-                placeholder="e.g. Colourful epoxy resin pour workshop"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Title <span className="text-xs text-gray-400">(shown as tooltip on hover)</span>
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full"
-                name="imageTitle"
-                defaultValue={category.imageTitle ?? ''}
-                placeholder="e.g. Epoxy Pour Workshop — Giftoria"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Caption <span className="text-xs text-gray-400">(shown below image on the public page)</span>
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full"
-                name="imageCaption"
-                defaultValue={category.imageCaption ?? ''}
-                placeholder="e.g. Participants creating epoxy art"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <ClientOnly>
-            <EditorField
-              name="description"
-              label="Description"
-              defaultValue={category.description ?? ''}
-              placeholder="Write a description..."
-            />
-          </ClientOnly>
-        </div>
-
-        <div className="flex gap-3 pt-2 border-t">
-          <button className="bg-gray-900 text-white rounded px-4 py-2">Save Changes</button>
-          <a href="/admin/categories" className="underline text-gray-600 self-center">Cancel</a>
-        </div>
-      </form>
+      {/* EditCategoryForm is a client component that handles:
+          - UnsavedChangesGuard (task 20)
+          - Success toast after saving (task 35)
+          - Disabled submit button during submission (task 42)
+          - focus-visible styles on all inputs (task 36) */}
+      <EditCategoryForm category={category} action={updateCategory} />
     </div>
   );
 }

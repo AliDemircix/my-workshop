@@ -9,6 +9,7 @@ import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
+import CreateCategoryForm from '@/components/admin/CreateCategoryForm';
 
 export default async function CategoriesPage({ searchParams }: { searchParams?: { error?: string } }) {
   async function createCategory(formData: FormData) {
@@ -63,115 +64,106 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
     orderBy: { name: 'asc' },
     include: { _count: { select: { sessions: true } } },
   });
+
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
         <p className="text-gray-600 mt-1">Manage workshop categories and their basic information</p>
       </div>
-      
+
       {searchParams?.error && (
         <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {decodeURIComponent(searchParams.error)}
         </div>
       )}
-      
+
+      {/* Task 37: "Add Category" form is now a separate section, not wrapping the
+          categories list. CreateCategoryForm is a client component that also handles
+          the unsaved-changes guard (task 33) and submit-button disabling (task 42). */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Add New Category</h2>
-        <form action={createCategory} className="space-y-4 border rounded p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-            {/* Left: image upload */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Category Image</label>
-              <ClientOnly>
-                <CategoryImageUploader />
-              </ClientOnly>
-            </div>
-            {/* Right: name + SEO fields */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category Name <span className="text-red-500">*</span></label>
-                <input className="border rounded px-3 py-2 w-full" name="name" placeholder="e.g. Epoxy Pour Workshop" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image Alt Text <span className="text-xs text-gray-400">(SEO)</span></label>
-                <input className="border rounded px-3 py-2 w-full" name="imageAlt" placeholder="e.g. Colourful epoxy resin pour workshop" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image Title <span className="text-xs text-gray-400">(tooltip on hover)</span></label>
-                <input className="border rounded px-3 py-2 w-full" name="imageTitle" placeholder="e.g. Epoxy Pour Workshop — Giftoria" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image Caption <span className="text-xs text-gray-400">(shown below image)</span></label>
-                <input className="border rounded px-3 py-2 w-full" name="imageCaption" placeholder="e.g. Participants creating epoxy art" />
-              </div>
-            </div>
-          </div>
-          <div>
-            <ClientOnly>
-              <EditorField name="description" label="Description (optional)" placeholder="Write a description..." />
-            </ClientOnly>
-          </div>
-          <div>
-            <button className="bg-gray-900 text-white rounded px-4 py-2">Add Category</button>
-          </div>
-        </form>
+        <ClientOnly>
+          <CreateCategoryForm action={createCategory} />
+        </ClientOnly>
+      </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-sm">
-              <th className="px-3 py-2 border-b">Image</th>
-              <th className="px-3 py-2 border-b">Name</th>
-              <th className="px-3 py-2 border-b">Description</th>
-              <th className="px-3 py-2 border-b">Created</th>
-              <th className="px-3 py-2 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {categories.map((c: { id: number; name: string; description?: string | null; imageUrl?: string | null; createdAt?: Date; _count?: { sessions: number } }) => (
-              <tr key={c.id} className="text-sm hover:bg-gray-50">
-                <td className="px-3 py-2">
-                  {c.imageUrl ? (
-                    <img src={c.imageUrl} alt={c.name} className="h-10 w-14 object-cover rounded border" />
-                  ) : (
-                    <div className="h-10 w-14 rounded border bg-gray-100" />
-                  )}
-                </td>
-                <td className="px-3 py-2">{c.name}</td>
-                <td className="px-3 py-2 max-w-xs truncate" title={c.description ?? ''}>{c.description ? c.description.replace(/<[^>]+>/g, '') : '-'}</td>
-                <td className="px-3 py-2">{c?.createdAt ? new Date(c.createdAt).toDateString() : '-'}</td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/categories/${c.id}`}
-                      className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
-                      title="Edit category"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                        <path d="M5.433 13.917l-1.354.339a.75.75 0 01-.904-.904l.339-1.354a2.25 2.25 0 01.592-1.09l6.82-6.82a2.25 2.25 0 113.182 3.182l-6.82 6.82a2.25 2.25 0 01-1.09.592z" />
-                        <path d="M3.25 15.25h13.5a.75.75 0 010 1.5H3.25a.75.75 0 010-1.5z" />
-                      </svg>
-                      <span className="sr-only">Edit</span>
-                    </Link>
-                    <DeleteCategoryButton
-                      id={c.id}
-                      action={deleteCategory}
-                      disabled={(c._count?.sessions || 0) > 0}
-                      title={c._count?.sessions ? 'Cannot delete category with sessions' : 'Delete category'}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="text-sm text-gray-600">
-        Total categories: <span className="font-semibold">{categories.length}</span>
-      </div>
-    </div>
+      {/* Task 43: Only render the table + count when there is at least one category */}
+      {categories.length > 0 && (
+        <div className="space-y-3">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-sm">
+                  <th className="px-3 py-2 border-b">Image</th>
+                  <th className="px-3 py-2 border-b">Name</th>
+                  <th className="px-3 py-2 border-b">Description</th>
+                  <th className="px-3 py-2 border-b">Created</th>
+                  <th className="px-3 py-2 border-b">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {categories.map((c: { id: number; name: string; description?: string | null; imageUrl?: string | null; createdAt?: Date; _count?: { sessions: number } }) => (
+                  <tr key={c.id} className="text-sm hover:bg-gray-50">
+                    <td className="px-3 py-2">
+                      {c.imageUrl ? (
+                        <img src={c.imageUrl} alt={c.name} className="h-10 w-14 object-cover rounded border" />
+                      ) : (
+                        <div className="h-10 w-14 rounded border bg-gray-100" />
+                      )}
+                    </td>
+                    <td className="px-3 py-2">{c.name}</td>
+                    <td className="px-3 py-2 max-w-xs truncate" title={c.description ?? ''}>{c.description ? c.description.replace(/<[^>]+>/g, '') : '-'}</td>
+                    <td className="px-3 py-2">{c?.createdAt ? new Date(c.createdAt).toDateString() : '-'}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/categories/${c.id}`}
+                          className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] rounded"
+                          title="Edit category"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                            <path d="M5.433 13.917l-1.354.339a.75.75 0 01-.904-.904l.339-1.354a2.25 2.25 0 01.592-1.09l6.82-6.82a2.25 2.25 0 113.182 3.182l-6.82 6.82a2.25 2.25 0 01-1.09.592z" />
+                            <path d="M3.25 15.25h13.5a.75.75 0 010 1.5H3.25a.75.75 0 010-1.5z" />
+                          </svg>
+                          <span className="sr-only">Edit</span>
+                        </Link>
+                        <DeleteCategoryButton
+                          id={c.id}
+                          action={deleteCategory}
+                          disabled={(c._count?.sessions || 0) > 0}
+                          title={c._count?.sessions ? 'Cannot delete category with sessions' : 'Delete category'}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="text-sm text-gray-600">
+            Total categories: <span className="font-semibold">{categories.length}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Empty-state illustration (task 22 — already done, shown only when no categories) */}
+      {categories.length === 0 && (
+        <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <p className="text-gray-600 font-medium">No categories yet</p>
+            <p className="text-sm text-gray-400 mt-1">Add your first workshop category using the form above.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

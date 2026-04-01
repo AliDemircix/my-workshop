@@ -44,8 +44,10 @@ export default function Calendar({
               key={key}
               disabled={!canSelect}
               onClick={() => canSelect && onSelect(key)}
+              aria-label={`${format(d, 'MMMM d')}${isSelected ? ', selected' : available && !isPastDate ? ', available' : ''}`}
+              aria-pressed={isSelected}
               className={[
-                'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200',
+                'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-1',
                 inMonth ? '' : 'opacity-40',
                 canSelect
                   ? 'border-orange-400 text-orange-600 hover:bg-orange-50 bg-white'

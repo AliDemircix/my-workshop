@@ -101,14 +101,21 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
     <div className="space-y-3 border rounded p-4">
       <h3 className="font-medium">Your details</h3>
       <div className="grid grid-cols-1 gap-3">
-        <input className="border rounded px-3 py-2 w-full" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="border rounded px-3 py-2 w-full" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="reserve-name" className="text-sm font-medium text-gray-700">Full name</label>
+          <input id="reserve-name" className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="reserve-email" className="text-sm font-medium text-gray-700">Email address</label>
+          <input id="reserve-email" type="email" className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
       </div>
       <div>
-        <label className="text-sm mr-2">Number of participants</label>
+        <label htmlFor="reserve-quantity" className="text-sm font-medium text-gray-700 block mb-1">Number of participants</label>
         <input
+          id="reserve-quantity"
           type="number"
-          className="border rounded px-3 py-2 w-24"
+          className="border rounded px-3 py-2 w-24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]"
           value={quantity}
           min={1}
           max={Math.max(1, remaining)}

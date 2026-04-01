@@ -38,7 +38,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
     'link',
   ];
   return (
-    <div className="bg-white text-black">
+    <div className="bg-white text-black relative z-10">
       <ReactQuill theme="snow" value={value} onChange={onChange} modules={modules} formats={formats} placeholder={placeholder} />
     </div>
   );

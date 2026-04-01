@@ -71,73 +71,12 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-      {/* LEFT — gift card grid */}
-      <div className="lg:col-span-3 space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gift Cards</h1>
-          <p className="mt-1 text-gray-500">Choose a gift card below — the price is fixed and ready to give.</p>
-        </div>
 
-        {giftCards.length === 0 ? (
-          <div className="rounded-2xl border border-gray-100 bg-white px-6 py-16 text-center text-gray-500">
-            No gift cards available yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {giftCards.map((card) => (
-              <div
-                key={card.id}
-                className={`relative rounded-2xl overflow-hidden shadow-sm border bg-white group transition-all ${
-                  selectedCard?.id === card.id
-                    ? 'border-[#c99706] ring-2 ring-[#c99706]/30'
-                    : 'border-gray-100'
-                }`}
-              >
-                {/* Image */}
-                <div className="relative aspect-video w-full overflow-hidden">
-                  {card.imageUrl ? (
-                    <img
-                      src={card.imageUrl}
-                      alt={card.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-yellow-200" />
-                  )}
-                  <div className="absolute top-2 right-2 bg-[#c99706] text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
-                    {formatEUR(card.priceCents)}
-                  </div>
-                </div>
-
-                {/* Card body */}
-                <div className="p-4">
-                  <p className="font-bold text-gray-900">{card.name}</p>
-                  {card.category && (
-                    <p className="text-xs text-gray-400 mt-0.5">{card.category.name}</p>
-                  )}
-                  {card.description && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{card.description}</p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleSelectCard(card)}
-                    className="mt-3 w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors"
-                  >
-                    {selectedCard?.id === card.id ? 'Selected' : 'Select'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* RIGHT — form + info cards */}
-      <div className="lg:col-span-2 space-y-4" ref={formRef}>
+      {/* RIGHT — purchase form (rendered first in DOM = first on mobile) */}
+      <div className="lg:col-span-2 space-y-4 order-first lg:order-last lg:sticky lg:top-24" ref={formRef}>
 
         {/* Purchase form */}
         <div className="bg-white rounded-2xl shadow p-6">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
               <svg className="w-5 h-5 text-[#c99706]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +88,6 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Selected card chip */}
             {selectedCard ? (
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-3 py-1 rounded-full">
@@ -167,10 +105,9 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
                 </span>
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">Select a gift card from the left to continue.</p>
+              <p className="text-sm text-gray-500 italic">Select a gift card below to continue.</p>
             )}
 
-            {/* Delivery toggle */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Delivery</label>
               <div className="flex rounded-xl overflow-hidden border border-gray-200">
@@ -180,9 +117,7 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
                     type="button"
                     onClick={() => setDelivery(mode)}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      delivery === mode
-                        ? 'bg-[#c99706] text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                      delivery === mode ? 'bg-[#c99706] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {mode === 'email' ? 'Send by email' : "I'll deliver it myself"}
@@ -191,7 +126,6 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
               </div>
             </div>
 
-            {/* Sender fields */}
             <fieldset className="space-y-3">
               <legend className="text-sm font-medium text-gray-700">Your details</legend>
               <input
@@ -212,7 +146,6 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
               />
             </fieldset>
 
-            {/* Recipient fields — only when sending by email */}
             {delivery === 'email' && (
               <fieldset className="space-y-3">
                 <legend className="text-sm font-medium text-gray-700">Recipient details</legend>
@@ -241,18 +174,16 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
               </fieldset>
             )}
 
-            {/* Error */}
             {error && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
                 {error}
               </p>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading || !selectedCard}
-              className="w-full bg-[#c99706] hover:bg-[#b8860b] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="w-full bg-[#c99706] hover:bg-[#b8860b] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-2"
             >
               {loading
                 ? 'Redirecting to payment…'
@@ -269,21 +200,9 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
           <p className="text-sm text-gray-500 mb-4">Three simple steps and the surprise is sorted.</p>
           <ol className="space-y-4">
             {[
-              {
-                n: '1',
-                title: 'Digital delivery',
-                desc: "You'll receive the gift voucher by email with a unique code.",
-              },
-              {
-                n: '2',
-                title: 'Spend it however you like',
-                desc: 'The recipient chooses a date or workshop on our website.',
-              },
-              {
-                n: '3',
-                title: 'Redeem',
-                desc: 'At checkout, the recipient enters the code to receive a discount.',
-              },
+              { n: '1', title: 'Digital delivery', desc: "You'll receive the gift voucher by email with a unique code." },
+              { n: '2', title: 'Spend it however you like', desc: 'The recipient chooses a date or workshop on our website.' },
+              { n: '3', title: 'Redeem', desc: 'At checkout, the recipient enters the code to receive a discount.' },
             ].map((step) => (
               <li key={step.n} className="flex items-start gap-3">
                 <span className="shrink-0 w-7 h-7 rounded-full bg-[#c99706] text-white text-xs font-bold flex items-center justify-center">
@@ -298,19 +217,69 @@ export default function GiftCardShop({ giftCards }: { giftCards: GiftCardItem[] 
           </ol>
         </div>
 
-        {/* A personal touch */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-2">
           <p className="font-semibold text-gray-900">A personal touch</p>
-          <p className="text-sm text-gray-600">
-            Add a lovely message or schedule delivery for the perfect moment.
-          </p>
+          <p className="text-sm text-gray-600">Add a lovely message or schedule delivery for the perfect moment.</p>
           <p className="text-sm text-gray-600">
             Along with the digital voucher, we&apos;ll also send you a print-friendly design. Handy if you want to hand over the surprise in person.
           </p>
-          <p className="text-sm text-gray-600">
-            Do you have any special requests? Let us know via the contact form or WhatsApp.
-          </p>
+          <p className="text-sm text-gray-600">Do you have any special requests? Let us know via the contact form or WhatsApp.</p>
         </div>
+      </div>
+
+      {/* LEFT — gift card grid (second in DOM = shown after form on mobile) */}
+      <div className="lg:col-span-3 space-y-4 order-last lg:order-first">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gift Cards</h1>
+          <p className="mt-1 text-gray-500">Choose a gift card below — the price is fixed and ready to give.</p>
+        </div>
+
+        {giftCards.length === 0 ? (
+          <div className="rounded-2xl border border-gray-100 bg-white px-6 py-16 text-center text-gray-500">
+            No gift cards available yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {giftCards.map((card) => (
+              <div
+                key={card.id}
+                className={`relative rounded-2xl overflow-hidden shadow-sm border bg-white group transition-all ${
+                  selectedCard?.id === card.id ? 'border-[#c99706] ring-2 ring-[#c99706]/30' : 'border-gray-100'
+                }`}
+              >
+                <div className="relative aspect-video w-full overflow-hidden">
+                  {card.imageUrl ? (
+                    <img
+                      src={card.imageUrl}
+                      alt={card.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-yellow-200" />
+                  )}
+                  <div className="absolute top-2 right-2 bg-[#c99706] text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
+                    {formatEUR(card.priceCents)}
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <p className="font-bold text-gray-900">{card.name}</p>
+                  {card.category && <p className="text-xs text-gray-400 mt-0.5">{card.category.name}</p>}
+                  {card.description && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{card.description}</p>}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectCard(card)}
+                    className="mt-3 w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-1"
+                  >
+                    {selectedCard?.id === card.id ? 'Selected ✓' : 'Select'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

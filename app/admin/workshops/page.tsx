@@ -127,8 +127,8 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
                 key={s.id}
                 className={`text-sm hover:bg-gray-50 ${new Date(s.endTime) < new Date() ? 'bg-gray-100' : ''}`}
               >
-                <td className="px-3 py-2">
-                  <Link href={`/admin/workshops/${s.id}/details`} className="text-blue-600 hover:text-blue-800 underline">
+                <td className="px-3 py-2 max-w-[10rem]">
+                  <Link href={`/admin/workshops/${s.id}/details`} className="text-blue-600 hover:text-blue-800 underline block truncate" title={s.category.name}>
                     {s.category.name}
                   </Link>
                 </td>
@@ -147,8 +147,12 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
                     const end = new Date(s.endTime);
                     const reservedSeats = (s.reservations || []).reduce((sum, r) => (r.status !== 'CANCELED' && r.status !== 'REFUNDED' ? sum + r.quantity : sum), 0);
                     const isFinished = end < now;
+                    const isOverbooked = reservedSeats > s.capacity;
                     const isFull = reservedSeats >= s.capacity;
-                    const label = isFinished ? 'Finished' : isFull ? 'Ready' : 'In progress';
+                    if (isOverbooked) {
+                      return <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Overbooked</span>;
+                    }
+                    const label = isFinished ? 'Finished' : isFull ? 'Full' : 'Available';
                     const cls = isFinished
                       ? 'bg-gray-200 text-gray-800'
                       : isFull

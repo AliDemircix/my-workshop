@@ -45,10 +45,15 @@ export default async function Footer() {
               </Link>
             </li>
             <li>
-              <a 
-                href="https://giftoria.nl" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <Link href="/gift-voucher" className="text-gray-300 hover:text-white underline underline-offset-4">
+                Gift Cards
+              </Link>
+            </li>
+            <li>
+              <a
+                href="https://giftoria.nl"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-300 hover:text-white underline underline-offset-4"
               >
                 Webshop
@@ -112,7 +117,7 @@ export default async function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-gray-800 py-3 text-center text-xs text-gray-400">© {new Date().getFullYear()} Workshop. All rights reserved.</div>
+      <div className="border-t border-gray-800 py-3 text-center text-xs text-gray-400">© {new Date().getFullYear()} Giftoria. All rights reserved.</div>
     </footer>
   );
 }

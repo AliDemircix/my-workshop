@@ -15,6 +15,7 @@ async function saveBranding(formData: FormData) {
 
   const data = {
     logoUrl: addHttps(get('logoUrl')),
+    announcementBar: get('announcementBar'),
   };
 
   try {
@@ -34,6 +35,7 @@ async function saveBranding(formData: FormData) {
 export default async function BrandingSettingsPage() {
   const current = await (prisma as any).siteSettings.findUnique({ where: { id: 1 } });
   const logoUrl: string = current?.logoUrl ?? '';
+  const announcementBar: string = current?.announcementBar ?? 'Limited-time discounts available — book early to save!';
 
   return (
     <div className="space-y-6">
@@ -45,8 +47,24 @@ export default async function BrandingSettingsPage() {
       <SettingsToast />
 
       <form action={saveBranding} className="space-y-6">
+        <section className="border rounded p-4 space-y-4">
+          <h2 className="font-semibold mb-3">Announcement Bar</h2>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="announcementBar" className="text-sm font-medium text-gray-700">
+              Announcement bar text <span className="text-xs text-gray-400">(leave blank to hide)</span>
+            </label>
+            <input
+              id="announcementBar"
+              name="announcementBar"
+              className="border rounded px-3 py-2"
+              placeholder="Limited-time discounts available — book early to save!"
+              defaultValue={announcementBar}
+            />
+          </div>
+        </section>
+
         <section className="border rounded p-4">
-          <h2 className="font-semibold mb-3">Branding</h2>
+          <h2 className="font-semibold mb-3">Logo</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
             <div className="flex flex-col gap-1">
               <label htmlFor="logoUrl" className="text-sm font-medium text-gray-700">Site logo image URL</label>
