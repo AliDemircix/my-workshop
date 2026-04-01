@@ -31,16 +31,21 @@ export default function HomeCategoriesTabs({ categories, save }: Props) {
 
   return (
     <div className="border rounded">
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap border-b">
         {categories.map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => setActiveId(c.id)}
             className={[
-              'px-3 py-2 text-sm border-b md:min-w-[10rem] text-left',
-              activeId === c.id ? 'font-semibold bg-gray-50' : 'hover:bg-gray-50',
+              'px-3 py-2 text-sm md:min-w-[10rem] text-left transition-colors',
+              // Task 44: active tab has a brand-coloured bottom border so it is
+              // visually distinct from the hovered-inactive state.
+              activeId === c.id
+                ? 'font-semibold bg-white border-b-2 border-[#c99706] -mb-px text-[#c99706]'
+                : 'text-gray-600 hover:bg-gray-50 border-b-2 border-transparent',
             ].join(' ')}
+            aria-current={activeId === c.id ? 'page' : undefined}
           >
             {c.name}
           </button>
@@ -54,14 +59,16 @@ export default function HomeCategoriesTabs({ categories, save }: Props) {
           <form key={active.id} action={save} className="space-y-4">
             <input type="hidden" name="id" value={active.id} />
 
-            {/* Image upload */}
+            {/* Image upload — wrapped in ClientOnly to prevent SSR hydration mismatches (task 38) */}
             <div>
               <label className="block text-sm font-medium mb-1">Category Image</label>
-              <CategoryImageUploader
-                key={`img-${active.id}`}
-                initialUrl={active.imageUrl}
-                categoryName={active.name}
-              />
+              <ClientOnly>
+                <CategoryImageUploader
+                  key={`img-${active.id}`}
+                  initialUrl={active.imageUrl}
+                  categoryName={active.name}
+                />
+              </ClientOnly>
             </div>
 
             {/* Short Description (home) */}
@@ -89,10 +96,15 @@ export default function HomeCategoriesTabs({ categories, save }: Props) {
             </div>
 
             <div className="flex gap-2">
-              <button className="bg-gray-900 text-white rounded px-4 py-2">Save</button>
+              <button
+                type="submit"
+                className="bg-gray-900 text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-1"
+              >
+                Save
+              </button>
               <button
                 type="button"
-                className="underline text-sm"
+                className="underline text-sm text-gray-600 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-1 rounded"
                 onClick={() => {
                   // scroll to top of the tab list
                   const el = document.querySelector('div.border.rounded');

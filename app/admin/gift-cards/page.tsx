@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { requireAdminAction } from '@/lib/auth';
 import { formatEUR } from '@/lib/currency';
+import CreateGiftCardForm from '@/components/admin/CreateGiftCardForm';
 
 export default async function GiftCardsPage() {
   requireAdminAction();
@@ -79,100 +80,11 @@ export default async function GiftCardsPage() {
         <p className="text-gray-600 mt-1">Create and manage gift card products shown on the public shop</p>
       </div>
 
-      {/* Create form */}
+      {/* Create form — uses CreateGiftCardForm client component which replaces
+          the old plain URL input with a CategoryImageUploader (task 41) */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Create Gift Card</h2>
-        <form action={createGiftCard} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Name */}
-            <div>
-              <label htmlFor="gc-name" className="block text-sm font-medium text-gray-700 mb-1">
-                Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="gc-name"
-                name="name"
-                type="text"
-                required
-                placeholder="e.g. Pottery Workshop Gift Card"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c99706]/40 focus:border-[#c99706]"
-              />
-            </div>
-
-            {/* Price */}
-            <div>
-              <label htmlFor="gc-price" className="block text-sm font-medium text-gray-700 mb-1">
-                Price (€) <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="gc-price"
-                name="priceEuros"
-                type="number"
-                required
-                min="1"
-                step="0.01"
-                placeholder="e.g. 45"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c99706]/40 focus:border-[#c99706]"
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label htmlFor="gc-category" className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <select
-                id="gc-category"
-                name="categoryId"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#c99706]/40 focus:border-[#c99706]"
-              >
-                <option value="">— No category —</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Image URL */}
-            <div>
-              <label htmlFor="gc-image" className="block text-sm font-medium text-gray-700 mb-1">
-                Image URL <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                id="gc-image"
-                name="imageUrl"
-                type="text"
-                placeholder="https://..."
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c99706]/40 focus:border-[#c99706]"
-              />
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label htmlFor="gc-desc" className="block text-sm font-medium text-gray-700 mb-1">
-              Description <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <textarea
-              id="gc-desc"
-              name="description"
-              rows={3}
-              placeholder="Short description shown on the gift card..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c99706]/40 focus:border-[#c99706] resize-none"
-            />
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-5 py-2 rounded text-sm transition-colors"
-            >
-              Create Gift Card
-            </button>
-          </div>
-        </form>
+        <CreateGiftCardForm categories={categories} action={createGiftCard} />
       </div>
 
       {/* List */}
