@@ -8,7 +8,10 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
   if (!slug) return notFound();
 
   // Try to find by slug
-  let category = await (prisma.category as any).findFirst({ where: { slug } });
+  let category = await (prisma.category as any).findFirst({
+    where: { slug },
+    include: { photos: { orderBy: { position: 'asc' } } },
+  });
   if (!category) {
     // Try backfill: match by normalized name
     const all = await prisma.category.findMany();

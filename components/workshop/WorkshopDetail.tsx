@@ -1,10 +1,12 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { startOfMonth } from 'date-fns';
 import Link from 'next/link';
 import ReservationSidebar from '@/components/reservation/ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
+
+type Photo = { id: number; url: string };
 
 type Category = {
   id: number;
@@ -13,11 +15,28 @@ type Category = {
   description?: string | null;
   longDescription?: string | null;
   slug?: string | null;
+  photos?: Photo[];
 };
 
 export default function WorkshopDetail({ category }: { category: Category }) {
   const categoryId = category.id;
   const [viewDate, setViewDate] = useState<Date>(startOfMonth(new Date()));
+  const photos = category.photos ?? [];
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const prev = () => setLightboxIndex((i) => (i! + photos.length - 1) % photos.length);
+  const next = () => setLightboxIndex((i) => (i! + 1) % photos.length);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxIndex]);
   const { data: availability } = useQuery<any>({
     queryKey: ['availability', categoryId, viewDate.getMonth(), viewDate.getFullYear()],
     queryFn: async () => (await fetch(`/api/availability?categoryId=${categoryId}&month=${viewDate.getMonth()}&year=${viewDate.getFullYear()}`)).json(),
@@ -38,16 +57,8 @@ export default function WorkshopDetail({ category }: { category: Category }) {
         <span className="text-gray-900 font-medium" aria-current="page">{category.name}</span>
       </nav>
 
-      {/* Above-the-fold heading + Book CTA */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
-        <Link
-          href={`/reserve?categoryId=${categoryId}`}
-          className="shrink-0 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-2"
-        >
-          Book Now
-        </Link>
-      </div>
+      {/* Above-the-fold heading */}
+      <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
 
       {/* Two-column layout — stacks on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -74,17 +85,6 @@ export default function WorkshopDetail({ category }: { category: Category }) {
             )}
           </div>
 
-          <div className="pt-4 border-t border-gray-100">
-            <Link
-              href={`/reserve?categoryId=${categoryId}`}
-              className="inline-flex items-center gap-2 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-2"
-            >
-              Book This Workshop
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </Link>
-          </div>
         </div>
 
         {/* Right: Calendar & reservation sidebar */}
@@ -95,6 +95,84 @@ export default function WorkshopDetail({ category }: { category: Category }) {
           </div>
         </aside>
       </div>
+
+      {/* Event Photos gallery — only rendered when the category has photos */}
+      {photos.length > 0 && (
+        <section aria-labelledby="event-photos-heading" className="space-y-4">
+          <h2 id="event-photos-heading" className="text-xl font-semibold text-gray-900">
+            Event Photos
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {photos.map((photo, idx) => (
+              <button
+                key={photo.id}
+                onClick={() => setLightboxIndex(idx)}
+                className="block aspect-square rounded-xl overflow-hidden border border-gray-100 shadow-sm
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] cursor-zoom-in"
+              >
+                <img
+                  src={photo.url}
+                  alt={`Event photo ${idx + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+
+          {/* Prev */}
+          {photos.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); prev(); }}
+              className="absolute left-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Previous photo"
+            >
+              ‹
+            </button>
+          )}
+
+          <img
+            src={photos[lightboxIndex].url}
+            alt={`Event photo ${lightboxIndex + 1}`}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next */}
+          {photos.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); next(); }}
+              className="absolute right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Next photo"
+            >
+              ›
+            </button>
+          )}
+
+          {/* Counter */}
+          <div className="absolute bottom-4 text-white/70 text-sm">
+            {lightboxIndex + 1} / {photos.length}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,19 +10,28 @@ generator client {
 }
 
 model Category {
-  id              Int        @id @default(autoincrement())
-  name            String     @unique
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
   description     String?
   imageUrl        String?
   imageAlt        String?
   imageCaption    String?
   imageTitle      String?
-  slug            String?    @unique
+  slug            String?         @unique
   longDescription String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   sessions        Session[]
   giftCards       GiftCard[]
+  photos          CategoryPhoto[]
+}
+
+model CategoryPhoto {
+  id         Int      @id @default(autoincrement())
+  categoryId Int
+  url        String
+  position   Int      @default(0)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
 
 model Session {

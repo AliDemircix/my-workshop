@@ -5,12 +5,16 @@ import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
 import EditCategoryForm from '@/components/admin/EditCategoryForm';
+import EventPhotosManager from '@/components/admin/EventPhotosManager';
 
 export default async function EditCategoryPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   if (!id) return notFound();
 
-  const category = await (prisma.category as any).findUnique({ where: { id } });
+  const category = await (prisma.category as any).findUnique({
+    where: { id },
+    include: { photos: { orderBy: { position: 'asc' } } },
+  });
   if (!category) return notFound();
 
   async function updateCategory(formData: FormData) {
@@ -71,6 +75,12 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
           - Disabled submit button during submission (task 42)
           - focus-visible styles on all inputs (task 36) */}
       <EditCategoryForm category={category} action={updateCategory} />
+
+      <EventPhotosManager
+        categoryId={id}
+        categoryName={category.name}
+        initialPhotos={category.photos ?? []}
+      />
     </div>
   );
 }

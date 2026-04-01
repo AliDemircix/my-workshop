@@ -238,20 +238,12 @@ export default async function HomePage() {
                       )}
                     </div>
                     
-                    <div className="flex gap-3">
-                      <Link 
-                        href={`/workshops/${slug}`} 
-                        className="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg px-4 py-2 font-medium transition-all duration-300"
-                      >
-                        Learn More
-                      </Link>
-                      <Link
-                        href={`/reserve?categoryId=${category.id}`}
-                        className="flex-1 text-center bg-[#c99706] hover:bg-[#b8860b] text-white rounded-lg px-4 py-2 font-semibold transition-all duration-300"
-                      >
-                        Book Now
-                      </Link>
-                    </div>
+                    <Link
+                      href={`/workshops/${slug}`}
+                      className="block w-full text-center bg-[#c99706] hover:bg-[#b8860b] text-white rounded-lg px-4 py-2 font-semibold transition-all duration-300"
+                    >
+                      Book Now
+                    </Link>
                   </div>
                   
                   {/* Floating badge */}
