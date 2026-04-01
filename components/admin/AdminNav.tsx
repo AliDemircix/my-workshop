@@ -81,6 +81,7 @@ export default function AdminNav({ isAdmin = false }: Props) {
     { href: '/admin/settings/social', label: 'Social Links' },
     { href: '/admin/settings/branding', label: 'Branding' },
     { href: '/admin/settings/slider', label: 'Slider Images' },
+    { href: '/admin/settings/maintenance', label: 'Maintenance Mode' },
   ];
 
   const isSettingsActive = pathname.startsWith('/admin/settings');
