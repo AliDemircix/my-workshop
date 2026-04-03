@@ -95,6 +95,12 @@ model GiftCard {
   updatedAt   DateTime  @updatedAt
 }
 
+model MailSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 // Global site settings (single row with id=1)
 model SiteSettings {
   id             Int      @id

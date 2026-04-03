@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Slider from '@/components/Slider';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
+import MailListSubscribe from '@/components/MailListSubscribe';
 import { formatEUR } from '@/lib/currency';
 import { sanitizeHtml } from '@/lib/sanitize';
 import type { Metadata } from 'next';
@@ -327,6 +328,9 @@ export default async function HomePage() {
 
       {/* Testimonials Section */}
       <Testimonials />
+
+      {/* Mailing List Subscribe */}
+      <MailListSubscribe />
 
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-[#c99706] to-[#b8860b] -mx-4 px-4 py-16 text-white text-center">
