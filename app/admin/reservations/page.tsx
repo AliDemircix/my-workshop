@@ -230,7 +230,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
                     perPage={perPage}
                     sort={sort}
                     status={status}
-                    categoryId={categoryId || ''}
+                    categoryId={categoryId ? String(categoryId) : ''}
                     q={q}
                     disabled={r.status === 'REFUNDED' || r.status === 'CANCELED'}
                   />
