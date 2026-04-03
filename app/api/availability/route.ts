@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
-import { startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   type TimeInfo = { id: number; start: string; end: string; priceCents: number; remaining: number };
   const byDate: Record<string, { remaining: number; times: TimeInfo[] }> = {};
   for (const s of sessions) {
-    const dateKey = startOfDay(s.date).toISOString();
+    const dateKey = format(s.date, 'yyyy-MM-dd');
   const reserved = s.reservations.reduce((a: number, r: { status: string; quantity: number }) => a + (r.status === 'CANCELED' ? 0 : r.quantity), 0);
     const remaining = Math.max(0, s.capacity - reserved);
     const time: TimeInfo = { id: s.id, start: s.startTime.toISOString(), end: s.endTime.toISOString(), priceCents: s.priceCents, remaining };

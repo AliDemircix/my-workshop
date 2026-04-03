@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { parseISO, startOfDay, startOfMonth } from 'date-fns';
+import { parseISO, startOfMonth } from 'date-fns';
 import ReservationSidebar from './ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
 
@@ -35,7 +35,7 @@ export default function ReservationFlow({
   const initialViewDate = initialDate ? startOfMonth(parseISO(initialDate)) : startOfMonth(new Date());
   const [viewDate, setViewDate] = useState<Date>(initialViewDate);
 
-  const initialDateKey = initialDate ? startOfDay(parseISO(initialDate)).toISOString() : null;
+  const initialDateKey = initialDate ?? null;
 
   const { data: availability, isLoading: availabilityLoading } = useQuery<any>({
     queryKey: ['availability', categoryId, viewDate.getMonth(), viewDate.getFullYear()],

@@ -1,5 +1,5 @@
 "use client";
-import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameMonth, startOfDay, startOfMonth, startOfWeek, isAfter, isSameDay } from 'date-fns';
+import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek, isAfter, isSameDay, startOfDay } from 'date-fns';
 
 export default function Calendar({
   monthDate,
@@ -17,7 +17,7 @@ export default function Calendar({
   const days = eachDayOfInterval({ start, end });
 
   const has = new Set(availabilityKeys);
-  const toKey = (d: Date) => startOfDay(d).toISOString();
+  const toKey = (d: Date) => format(d, 'yyyy-MM-dd');
   const weekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const today = startOfDay(new Date());
 
