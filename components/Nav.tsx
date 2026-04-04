@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 type Props = { isAdmin?: boolean; logoUrl?: string };
 
 export default function Nav({ isAdmin = false }: Props) {
   const pathname = usePathname() || '/';
   const [open, setOpen] = useState(false);
+  const t = useTranslations('nav');
 
   // Close menu on route change
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -23,9 +25,9 @@ export default function Nav({ isAdmin = false }: Props) {
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/gift-voucher', label: 'Gift Cards' },
-    { href: '/faq', label: 'FAQ' },
+    { href: '/', label: t('home') },
+    { href: '/gift-voucher', label: t('giftCards') },
+    { href: '/faq', label: t('faq') },
   ];
 
   return (
@@ -49,7 +51,7 @@ export default function Nav({ isAdmin = false }: Props) {
           href="/reserve"
           className="bg-[#c99706] hover:bg-[#b8860b] text-white px-4 py-2 rounded-md font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
-          Book Workshop
+          {t('bookWorkshop')}
         </Link>
 
         <a
@@ -58,7 +60,7 @@ export default function Nav({ isAdmin = false }: Props) {
           rel="noopener noreferrer"
           className="underline underline-offset-4 text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-sm"
         >
-          Webshop
+          {t('webshop')}
         </a>
 
         {isAdmin && (
@@ -69,7 +71,7 @@ export default function Nav({ isAdmin = false }: Props) {
               isActive('/admin') ? 'text-white font-semibold' : 'text-gray-300 hover:text-white'
             }`}
           >
-            Admin
+            {t('admin')}
           </Link>
         )}
       </nav>
@@ -80,7 +82,7 @@ export default function Nav({ isAdmin = false }: Props) {
           href="/reserve"
           className="bg-[#c99706] hover:bg-[#b8860b] text-white text-sm px-3 py-1.5 rounded-md font-semibold transition-colors"
         >
-          Book
+          {t('book')}
         </Link>
 
         <button
@@ -145,7 +147,7 @@ export default function Nav({ isAdmin = false }: Props) {
               rel="noopener noreferrer"
               className="flex items-center justify-between py-4 border-b border-white/10 text-lg font-medium text-white hover:text-[#c99706] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] rounded"
             >
-              Webshop
+              {t('webshop')}
               <svg className="w-4 h-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -170,7 +172,7 @@ export default function Nav({ isAdmin = false }: Props) {
                 href="/reserve"
                 className="block w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-center font-semibold py-4 rounded-xl text-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]"
               >
-                Book Workshop
+                {t('bookWorkshop')}
               </Link>
             </div>
           </nav>

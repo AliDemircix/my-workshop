@@ -15,6 +15,8 @@ type Category = {
   id: number;
   name: string;
   description?: string | null;
+  descriptionEn?: string | null;
+  descriptionTr?: string | null;
   imageUrl?: string | null;
   imageAlt?: string | null;
   imageCaption?: string | null;
@@ -26,29 +28,107 @@ type Props = {
   action: (formData: FormData) => Promise<void>;
 };
 
+function TranslateButton({
+  sourceText,
+  targetLang,
+  onTranslated,
+}: {
+  sourceText: string;
+  targetLang: 'EN' | 'TR';
+  onTranslated: (text: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    if (!sourceText.trim()) {
+      toast.error('Write the Dutch description first before translating.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: sourceText, targetLang }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.error ?? 'Translation failed');
+      }
+      const { translated } = await res.json();
+      onTranslated(translated);
+      toast.success('Translation applied — review and save.');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Translation failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const flag = targetLang === 'EN' ? '🇬🇧' : '🇹🇷';
+  const lang = targetLang === 'EN' ? 'English' : 'Turkish';
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-[#c99706] text-[#c99706] hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      {loading ? (
+        <>
+          <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          Translating…
+        </>
+      ) : (
+        <>{flag} Auto-translate to {lang}</>
+      )}
+    </button>
+  );
+}
+
 export default function EditCategoryForm({ category, action }: Props) {
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function markDirty() {
-    setIsDirty(true);
+  // Track primary (Dutch) description so TranslateButton can read it live
+  const [primaryDesc, setPrimaryDesc] = useState(category.description ?? '');
+
+  // Translated overrides — keyed so EditorField remounts with new defaultValue
+  const [enValue, setEnValue] = useState(category.descriptionEn ?? '');
+  const [trValue, setTrValue] = useState(category.descriptionTr ?? '');
+  const [enKey, setEnKey] = useState(0);
+  const [trKey, setTrKey] = useState(0);
+
+  function markDirty() { setIsDirty(true); }
+
+  function applyEnTranslation(text: string) {
+    setEnValue(text);
+    setEnKey(k => k + 1); // remount EditorField with new default
+    markDirty();
+  }
+
+  function applyTrTranslation(text: string) {
+    setTrValue(text);
+    setTrKey(k => k + 1);
+    markDirty();
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    // Clear dirty flag before the server action resolves so the guard does not
-    // fire on the programmatic redirect.
     setIsDirty(false);
     startTransition(async () => {
       try {
         await action(formData);
-        // Task 35: show a success toast so admins know the save worked.
         toast.success('Category saved successfully.');
         router.push('/admin/categories');
       } catch {
-        setIsDirty(true); // restore guard in case of error
+        setIsDirty(true);
         toast.error('Failed to save category. Please try again.');
       }
     });
@@ -56,16 +136,12 @@ export default function EditCategoryForm({ category, action }: Props) {
 
   return (
     <>
-      {/* Task 20: warn before navigating away with unsaved changes */}
       <UnsavedChangesGuard isDirty={isDirty} />
 
-      <form
-        onSubmit={handleSubmit}
-        onChange={markDirty}
-        className="space-y-6 border rounded p-6 bg-white"
-      >
+      <form onSubmit={handleSubmit} onChange={markDirty} className="space-y-6 border rounded p-6 bg-white">
+
+        {/* Image + meta */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* Left: image upload */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Category Image</label>
             <ClientOnly>
@@ -77,68 +153,91 @@ export default function EditCategoryForm({ category, action }: Props) {
             </ClientOnly>
           </div>
 
-          {/* Right: name + SEO fields */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category Name <span className="text-red-500">*</span>
               </label>
-              <input
-                className={INPUT_CLASS}
-                name="name"
-                defaultValue={category.name}
-                required
-              />
+              <input className={INPUT_CLASS} name="name" defaultValue={category.name} required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Alt Text <span className="text-xs text-gray-400">(SEO — describes the image for search engines)</span>
+                Image Alt Text <span className="text-xs text-gray-400">(SEO)</span>
               </label>
-              <input
-                className={INPUT_CLASS}
-                name="imageAlt"
-                defaultValue={category.imageAlt ?? ''}
-                placeholder="e.g. Colourful epoxy resin pour workshop"
-              />
+              <input className={INPUT_CLASS} name="imageAlt" defaultValue={category.imageAlt ?? ''} placeholder="e.g. Colourful epoxy resin pour workshop" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Title <span className="text-xs text-gray-400">(shown as tooltip on hover)</span>
+                Image Title <span className="text-xs text-gray-400">(tooltip on hover)</span>
               </label>
-              <input
-                className={INPUT_CLASS}
-                name="imageTitle"
-                defaultValue={category.imageTitle ?? ''}
-                placeholder="e.g. Epoxy Pour Workshop — Giftoria"
-              />
+              <input className={INPUT_CLASS} name="imageTitle" defaultValue={category.imageTitle ?? ''} placeholder="e.g. Epoxy Pour Workshop — Giftoria" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image Caption <span className="text-xs text-gray-400">(shown below image on the public page)</span>
+                Image Caption <span className="text-xs text-gray-400">(shown below image)</span>
               </label>
-              <input
-                className={INPUT_CLASS}
-                name="imageCaption"
-                defaultValue={category.imageCaption ?? ''}
-                placeholder="e.g. Participants creating epoxy art"
-              />
+              <input className={INPUT_CLASS} name="imageCaption" defaultValue={category.imageCaption ?? ''} placeholder="e.g. Participants creating epoxy art" />
             </div>
           </div>
         </div>
 
-        <div>
-          <ClientOnly>
-            <EditorField
-              name="description"
-              label="Description"
-              defaultValue={category.description ?? ''}
-              placeholder="Write a description..."
-            />
-          </ClientOnly>
+        {/* ── Descriptions ── */}
+        <div className="space-y-6 border-t pt-6">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800">Descriptions</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Write the primary Dutch description, then use the buttons to auto-translate. You can edit any translation manually before saving.</p>
+          </div>
+
+          {/* 🇳🇱 Dutch — primary */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">🇳🇱 Dutch <span className="text-gray-400 font-normal">(primary source)</span></label>
+            <ClientOnly>
+              <EditorField
+                name="description"
+                label=""
+                defaultValue={category.description ?? ''}
+                placeholder="Write the Dutch description…"
+                onValueChange={setPrimaryDesc}
+              />
+            </ClientOnly>
+          </div>
+
+          {/* 🇬🇧 English */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">🇬🇧 English</label>
+              <TranslateButton sourceText={primaryDesc} targetLang="EN" onTranslated={applyEnTranslation} />
+            </div>
+            <ClientOnly>
+              <EditorField
+                key={enKey}
+                name="descriptionEn"
+                label=""
+                defaultValue={enValue}
+                placeholder="English translation — auto-translate or type manually…"
+              />
+            </ClientOnly>
+          </div>
+
+          {/* 🇹🇷 Turkish */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">🇹🇷 Turkish</label>
+              <TranslateButton sourceText={primaryDesc} targetLang="TR" onTranslated={applyTrTranslation} />
+            </div>
+            <ClientOnly>
+              <EditorField
+                key={trKey}
+                name="descriptionTr"
+                label=""
+                defaultValue={trValue}
+                placeholder="Turkish translation — auto-translate or type manually…"
+              />
+            </ClientOnly>
+          </div>
         </div>
 
         <div className="flex gap-3 pt-2 border-t">
-          {/* Task 42: button is disabled while the server action is in-flight */}
           <button
             type="submit"
             disabled={isPending}

@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { getTranslations } from 'next-intl/server';
 
 export default async function Footer() {
-  // Fetch settings or use sensible defaults
+  const t = await getTranslations('footer');
+  const tn = await getTranslations('nav');
+
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } }).catch(() => null as any);
 
-  const privacyLabel = settings?.privacyLabel ?? 'Privacy Policy';
+  const privacyLabel = settings?.privacyLabel ?? t('privacy');
   const privacyUrl = '/privacy-policy';
-  const contactLabel = settings?.contactLabel ?? 'Contact';
+  const contactLabel = settings?.contactLabel ?? t('contact');
   const contactUrl = 'https://www.giftoria.nl/contact-us';
-  const refundLabel = settings?.refundLabel ?? 'Refund Policy';
+  const refundLabel = settings?.refundLabel ?? t('refund');
   const refundUrl = '/refund';
 
   const facebookUrl = settings?.facebookUrl ?? '#';
@@ -24,29 +27,29 @@ export default async function Footer() {
 
   return (
     <footer className="mt-12 bg-black text-white">
-  <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         {/* Column 1: Quick Links */}
         <div>
-          <h4 className="font-semibold mb-3">Quick Links</h4>
+          <h4 className="font-semibold mb-3">{t('quickLinks')}</h4>
           <ul className="space-y-2">
             <li>
               <Link href="/" className="text-gray-300 hover:text-white underline underline-offset-4">
-                Home
+                {tn('home')}
               </Link>
             </li>
             <li>
               <Link href="/reserve" className="text-gray-300 hover:text-white underline underline-offset-4">
-                Book Workshop
+                {t('bookWorkshop')}
               </Link>
             </li>
             <li>
               <Link href="/faq" className="text-gray-300 hover:text-white underline underline-offset-4">
-                FAQ
+                {tn('faq')}
               </Link>
             </li>
             <li>
               <Link href="/gift-voucher" className="text-gray-300 hover:text-white underline underline-offset-4">
-                Gift Cards
+                {tn('giftCards')}
               </Link>
             </li>
             <li>
@@ -56,7 +59,7 @@ export default async function Footer() {
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-white underline underline-offset-4"
               >
-                Webshop
+                {tn('webshop')}
               </a>
             </li>
           </ul>
@@ -64,7 +67,7 @@ export default async function Footer() {
 
         {/* Column 2: Legal Pages */}
         <div>
-          <h4 className="font-semibold mb-3">Legal</h4>
+          <h4 className="font-semibold mb-3">{t('legal')}</h4>
           <ul className="space-y-2">
             <li>
               <Link href={privacyUrl} className="text-gray-300 hover:text-white underline underline-offset-4">
@@ -77,10 +80,10 @@ export default async function Footer() {
               </Link>
             </li>
             <li>
-              <a 
+              <a
                 href={contactUrl}
-                target="_blank" 
-                rel="noopener noreferrer" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-300 hover:text-white underline underline-offset-4"
               >
                 {contactLabel}
@@ -91,7 +94,7 @@ export default async function Footer() {
 
         {/* Column 3: Social Media */}
         <div>
-          <h4 className="font-semibold mb-3">Follow Us</h4>
+          <h4 className="font-semibold mb-3">{t('followUs')}</h4>
           <div className="flex items-center gap-4">
             <a href={facebookUrl} target="_blank" rel="noreferrer" aria-label="Facebook" className="text-gray-400 hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.01 3.66 9.17 8.44 9.94v-7.03H7.9v-2.91h2.54V9.41c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.25c-1.23 0-1.61.76-1.61 1.54v1.85h2.74l-.44 2.91h-2.3V22c4.78-.77 8.44-4.93 8.44-9.94Z"/></svg>
@@ -107,17 +110,19 @@ export default async function Footer() {
 
         {/* Column 4: Contact Info */}
         <div>
-          <h4 className="font-semibold mb-3">Contact</h4>
+          <h4 className="font-semibold mb-3">{t('contactUs')}</h4>
           <ul className="space-y-2 text-gray-300">
-            <li><span className="font-medium">Email:</span> {email}</li>
-            <li><span className="font-medium">Phone:</span> {telephone}</li>
-            <li><span className="font-medium">Address:</span> {address}</li>
+            <li><span className="font-medium">{t('email')}:</span> {email}</li>
+            <li><span className="font-medium">{t('phone')}:</span> {telephone}</li>
+            <li><span className="font-medium">{t('address')}:</span> {address}</li>
             <li><span className="font-medium">KVK:</span> {kvk}</li>
             <li><span className="font-medium">IBAN:</span> {iban}</li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-gray-800 py-3 text-center text-xs text-gray-400">© {new Date().getFullYear()} Giftoria. All rights reserved.</div>
+      <div className="border-t border-gray-800 py-3 text-center text-xs text-gray-400">
+        © {new Date().getFullYear()} Giftoria. {t('rights')}
+      </div>
     </footer>
   );
 }
