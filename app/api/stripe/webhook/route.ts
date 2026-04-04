@@ -3,6 +3,16 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -38,11 +48,11 @@ export async function POST(req: NextRequest) {
             // Confirmation to purchaser
             const purchaserSubject = 'Your gift voucher is ready!';
             const purchaserHtml = `
-              <p>Hi ${voucher.purchaserName},</p>
+              <p>Hi ${escapeHtml(voucher.purchaserName)},</p>
               <p>Thank you for purchasing a gift voucher. Here are the details:</p>
-              <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${voucher.code}</span></p>
-              <p><strong>Value:</strong> ${amountLabel}</p>
-              <p><strong>Valid Until:</strong> ${expiryLabel}</p>
+              <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${escapeHtml(voucher.code)}</span></p>
+              <p><strong>Value:</strong> ${escapeHtml(amountLabel)}</p>
+              <p><strong>Valid Until:</strong> ${escapeHtml(expiryLabel)}</p>
               <p>This voucher can be applied at checkout when booking a workshop.</p>
               <p>Enjoy!</p>
             `;
@@ -55,10 +65,10 @@ export async function POST(req: NextRequest) {
               const recipientSubject = `You've received a gift voucher!`;
               const recipientHtml = `
                 <p>Hi there,</p>
-                <p>${voucher.purchaserName} has sent you a gift voucher for a workshop!</p>
-                <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${voucher.code}</span></p>
-                <p><strong>Value:</strong> ${amountLabel}</p>
-                <p><strong>Valid Until:</strong> ${expiryLabel}</p>
+                <p>${escapeHtml(voucher.purchaserName)} has sent you a gift voucher for a workshop!</p>
+                <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${escapeHtml(voucher.code)}</span></p>
+                <p><strong>Value:</strong> ${escapeHtml(amountLabel)}</p>
+                <p><strong>Valid Until:</strong> ${escapeHtml(expiryLabel)}</p>
                 <p>Use this code at checkout when booking your workshop.</p>
                 <p>Enjoy!</p>
               `;
@@ -107,10 +117,10 @@ export async function POST(req: NextRequest) {
             const when = sessionDb ? new Date(sessionDb.date) : null;
             const subject = `Your reservation is confirmed`;
             const html = `
-              <p>Hi ${updated.name},</p>
+              <p>Hi ${escapeHtml(updated.name)},</p>
               <p>Thanks for your payment. Your reservation is confirmed.</p>
-              ${sessionDb ? `<p><strong>Workshop:</strong> ${sessionDb.category.name}</p>
-              <p><strong>Date:</strong> ${when?.toDateString()}</p>` : ''}
+              ${sessionDb ? `<p><strong>Workshop:</strong> ${escapeHtml(sessionDb.category.name)}</p>
+              <p><strong>Date:</strong> ${escapeHtml(when?.toDateString())}</p>` : ''}
               <p><strong>Participants:</strong> ${updated.quantity}</p>
               <p>We look forward to seeing you!</p>
             `;
@@ -135,7 +145,7 @@ export async function POST(req: NextRequest) {
           if (!r.email) continue;
           const subject = 'Your refund has been completed';
           const html = `
-            <p>Hi ${r.name},</p>
+            <p>Hi ${escapeHtml(r.name)},</p>
             <p>Your refund has been completed. It may take a few days for it to appear on your statement.</p>
             <p><strong>Participants:</strong> ${r.quantity}</p>
           `;

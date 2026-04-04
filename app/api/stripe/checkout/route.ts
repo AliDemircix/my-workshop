@@ -31,6 +31,9 @@ export async function POST(req: NextRequest) {
     include: { session: { include: { category: true } } },
   });
   if (!reservation) return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
+  if (reservation.status !== 'PENDING') {
+    return NextResponse.json({ error: 'Reservation is not in a payable state' }, { status: 409 });
+  }
 
   const session = reservation.session;
   const totalPrice = session.priceCents * reservation.quantity;
@@ -122,7 +125,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ url: checkout.url });
   } catch (err: any) {
-    const message = err?.message ?? 'Stripe checkout failed';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Stripe checkout error:', err);
+    return NextResponse.json({ error: 'Checkout failed. Please try again.' }, { status: 500 });
   }
 }

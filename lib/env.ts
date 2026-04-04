@@ -40,7 +40,10 @@ export function validateEnv(): EnvConfig {
 
   // Validate admin credentials are not using defaults
   if (process.env.ADMIN_USERNAME === 'admin' && process.env.ADMIN_PASSWORD === 'admin') {
-    console.warn('⚠️  WARNING: Using default admin credentials! Change ADMIN_USERNAME and ADMIN_PASSWORD in production.');
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Default admin credentials detected in production. Set ADMIN_USERNAME and ADMIN_PASSWORD to secure values.');
+    }
+    console.warn('⚠️  WARNING: Using default admin credentials! Change ADMIN_USERNAME and ADMIN_PASSWORD before deploying to production.');
   }
 
   // Validate Stripe keys format

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 interface VoucherState {
   code: string;
@@ -11,6 +12,7 @@ interface VoucherState {
 }
 
 export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: number; remaining?: number }) {
+  const t = useTranslations('reserve');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -85,16 +87,16 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
   };
 
   const buttonLabel = loading
-    ? 'Processing…'
+    ? t('processing')
     : voucher.status === 'valid'
-    ? 'Book Now (voucher applied)'
-    : 'Book Now';
+    ? t('bookNowVoucher')
+    : t('bookNow');
 
   return (
     <div className="space-y-4">
       <div>
         <label htmlFor="reserve-quantity" className="text-sm font-medium text-gray-700 block mb-1">
-          Number of participants
+          {t('participants')}
         </label>
         <input
           id="reserve-quantity"
@@ -111,9 +113,9 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
           }}
         />
         {remaining > 0 ? (
-          <p className="text-xs text-gray-500 mt-1">Max {remaining} {remaining === 1 ? 'spot' : 'spots'} left</p>
+          <p className="text-xs text-gray-500 mt-1">{remaining === 1 ? t('spotsLeft', { n: remaining }) : t('spotsLeftPlural', { n: remaining })}</p>
         ) : (
-          <p className="text-xs text-red-600 mt-1">Sold out</p>
+          <p className="text-xs text-red-600 mt-1">{t('soldOut')}</p>
         )}
       </div>
 
@@ -127,7 +129,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
           <svg className={`w-4 h-4 transition-transform ${voucherOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          Have a gift voucher?
+          {t('haveVoucher')}
         </button>
 
         {voucherOpen && (
@@ -151,16 +153,16 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
                   onClick={applyVoucher}
                   disabled={voucher.status === 'checking' || voucherInput.trim().length === 0}
                 >
-                  {voucher.status === 'checking' ? 'Checking…' : 'Apply'}
+                  {voucher.status === 'checking' ? t('checking') : t('apply')}
                 </button>
               </div>
             )}
 
             {voucher.status === 'valid' && voucher.amountCents !== undefined && (
               <div className="flex items-center justify-between rounded bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800">
-                <span>Voucher <strong>{voucher.code}</strong> — €{(voucher.amountCents / 100).toFixed(2)} applied</span>
+                <span>{t('voucherApplied', { code: voucher.code, amount: (voucher.amountCents / 100).toFixed(2) })}</span>
                 <button type="button" className="ml-3 text-green-600 hover:text-green-800 underline text-xs" onClick={clearVoucher}>
-                  Remove
+                  {t('removeVoucher')}
                 </button>
               </div>
             )}

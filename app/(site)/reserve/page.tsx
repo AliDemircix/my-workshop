@@ -1,13 +1,15 @@
 import ReservationFlow from '@/components/reservation/ReservationFlow';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
-export default function ReservePage({
+export default async function ReservePage({
   searchParams,
 }: {
   searchParams: { categoryId?: string; date?: string };
 }) {
   const initialCategoryId = searchParams.categoryId ? Number(searchParams.categoryId) : undefined;
-  const initialDate = searchParams.date; // "yyyy-MM-dd" or undefined
+  const initialDate = searchParams.date;
+  const t = await getTranslations('reserve');
 
   return (
     <main className="space-y-6">
@@ -17,14 +19,14 @@ export default function ReservePage({
           Home
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900 font-medium">Book Workshop</span>
+        <span className="text-gray-900 font-medium">{t('breadcrumb')}</span>
       </nav>
 
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Book Your Creative Workshop</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{t('pageTitle')}</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose your preferred workshop, select a date and time, and join us for an inspiring creative experience!
+          {t('pageSubtitle')}
         </p>
       </div>
 
