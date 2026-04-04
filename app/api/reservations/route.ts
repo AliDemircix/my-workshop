@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     } 
   });
   if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
-  const reserved = session.reservations.reduce((a: number, r: { status: string; quantity: number }) => a + (r.status === 'CANCELED' ? 0 : r.quantity), 0);
+  const reserved = session.reservations.reduce((a: number, r: { status: string; quantity: number }) => a + (['CANCELED', 'REFUNDING', 'REFUNDED'].includes(r.status) ? 0 : r.quantity), 0);
   const remaining = session.capacity - reserved;
   if (quantity > remaining) return NextResponse.json({ error: 'Not enough slots' }, { status: 409 });
 

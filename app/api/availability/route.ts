@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const byDate: Record<string, { remaining: number; times: TimeInfo[] }> = {};
   for (const s of sessions) {
     const dateKey = format(s.date, 'yyyy-MM-dd');
-  const reserved = s.reservations.reduce((a: number, r: { status: string; quantity: number }) => a + (r.status === 'CANCELED' ? 0 : r.quantity), 0);
+  const reserved = s.reservations.reduce((a: number, r: { status: string; quantity: number }) => a + (['CANCELED', 'REFUNDING', 'REFUNDED'].includes(r.status) ? 0 : r.quantity), 0);
     const remaining = Math.max(0, s.capacity - reserved);
     const time: TimeInfo = { id: s.id, start: s.startTime.toISOString(), end: s.endTime.toISOString(), priceCents: s.priceCents, remaining };
     if (!byDate[dateKey]) byDate[dateKey] = { remaining: 0, times: [] };
