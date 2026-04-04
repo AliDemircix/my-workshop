@@ -88,8 +88,8 @@ export default async function WorkshopDetailsPage({ params }: { params: { id: st
             ) : (
               session.reservations.map((r: { id: number; name: string | null; email: string | null; status: string; quantity: number; createdAt: Date }) => (
                 <tr key={r.id} className="text-sm">
-                  <td className="px-3 py-2">{r.name ?? '—'}</td>
-                  <td className="px-3 py-2">{r.email ?? '—'}</td>
+                  <td className="px-3 py-2">{r.name || '—'}</td>
+                  <td className="px-3 py-2">{r.email || '—'}</td>
                   <td className="px-3 py-2">{r.quantity}</td>
                   <td className="px-3 py-2">
                     {r.status === 'PAID' ? (

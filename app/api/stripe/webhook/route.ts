@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
               <p>We look forward to seeing you!</p>
             `;
             // Don't block the webhook response on mail send
-            if (updated.email) sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err));
+            if (updated.email) sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err)); // email set by customer_details in webhook
           }
         }
       }
