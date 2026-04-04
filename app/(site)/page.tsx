@@ -267,68 +267,97 @@ export default async function HomePage() {
 
       {/* Workshop Categories Section */}
       {categories.length > 0 && (
-        <section id="workshops" className="space-y-8">
+        <section id="workshops" className="space-y-10">
+
+          {/* Section header */}
           <div className="text-center space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Our Workshop Categories</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover our range of creative workshops designed to inspire and educate. 
+              Discover our range of creative workshops designed to inspire and educate.
               Each workshop includes all materials and expert guidance.
             </p>
           </div>
-          
+
+          {/* Card grid */}
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((category, idx) => {
               const slug = category.slug || category.name.toLowerCase().replace(/\s+/g, '-');
               return (
-                <article key={category.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
-                  <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                <article
+                  key={category.id}
+                  className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border border-amber-100/60"
+                >
+                  {/* Gold top accent bar — matches session cards */}
+                  <div className="h-1 w-full bg-[#c99706]" />
+
+                  {/* Image block */}
+                  <div className="relative w-full aspect-[16/10] overflow-hidden">
                     {category.imageUrl ? (
-                      <img
-                        src={category.imageUrl}
-                        alt={(category as any).imageAlt || category.name}
-                        title={(category as any).imageTitle || undefined}
-                        loading={idx < 3 ? 'eager' : 'lazy'}
-                        decoding={idx < 3 ? 'sync' : 'async'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      <>
+                        <img
+                          src={category.imageUrl}
+                          alt={(category as any).imageAlt || category.name}
+                          title={(category as any).imageTitle || undefined}
+                          loading={idx < 3 ? 'eager' : 'lazy'}
+                          decoding={idx < 3 ? 'sync' : 'async'}
+                          className="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                        {/* Base gradient: always present */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        {/* Hover overlay: deepens on interaction */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                      /* No-image fallback: warm amber gradient + craft icon */
+                      <div className="w-full h-full bg-gradient-to-br from-amber-100 via-amber-50 to-yellow-100 flex flex-col items-center justify-center gap-3">
+                        <svg
+                          className="w-14 h-14 text-[#c99706] opacity-60"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
                         </svg>
+                        <span className="text-xs font-semibold tracking-widest uppercase text-amber-700/70">Handcrafted</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  
-                  <div className="p-6 space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#c99706] transition-colors duration-300">
+
+                    {/* Category title overlaid on the photo */}
+                    <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 pt-8">
+                      <h3 className="text-xl font-bold text-white leading-snug drop-shadow-sm">
                         {category.name}
                       </h3>
-                      {category.description && (
-                        <div 
-                          className="prose prose-sm prose-gray max-w-none text-gray-600 line-clamp-3" 
-                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(category.description) }} 
-                        />
-                      )}
                     </div>
-                    
+                  </div>
+
+                  {/* Card body: teaser + CTA */}
+                  <div className="px-5 pt-4 pb-5 space-y-4">
+                    {category.description && (
+                      <div
+                        className="text-sm text-gray-600 leading-relaxed line-clamp-2 prose prose-sm prose-gray max-w-none"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(category.description) }}
+                      />
+                    )}
+
                     <Link
                       href={`/workshops/${slug}`}
-                      className="block w-full text-center bg-[#c99706] hover:bg-[#b8860b] text-white rounded-lg px-4 py-2 font-semibold transition-all duration-300"
+                      className="group/cta flex items-center justify-center gap-2 w-full bg-[#c99706] hover:bg-[#b8860b] active:scale-[0.98] text-white text-sm font-bold py-3 rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] focus-visible:ring-offset-2"
                     >
-                      Book Now
-                    </Link>
-                  </div>
-                  
-                  {/* Floating badge */}
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
-                      <svg className="w-5 h-5 text-[#c99706]" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      <span>Explore &amp; Book</span>
+                      <svg
+                        className="w-4 h-4 translate-x-0 group-hover/cta:translate-x-1 transition-transform duration-200"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                       </svg>
-                    </div>
+                    </Link>
                   </div>
                 </article>
               );
