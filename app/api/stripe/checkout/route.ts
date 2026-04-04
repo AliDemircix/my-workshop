@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     // Voucher partially covers — charge the remainder via Stripe
     const checkout = await stripe.checkout.sessions.create({
       mode: 'payment',
+      payment_method_types: ['card', 'ideal'],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/cancel`,
       line_items: [
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
 
   const checkout = await stripe.checkout.sessions.create({
     mode: 'payment',
+    payment_method_types: ['card', 'ideal'],
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/reserve/cancel`,
     line_items: [
