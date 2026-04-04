@@ -53,8 +53,8 @@ model Reservation {
   id                        Int       @id @default(autoincrement())
   session                   Session   @relation(fields: [sessionId], references: [id])
   sessionId                 Int
-  email                     String
-  name                      String
+  email                     String?
+  name                      String?
   quantity                  Int       @default(1)
   status                    String    @default("PENDING") // PENDING | PAID | CANCELED | REFUNDED
   stripePaymentIntentId     String?

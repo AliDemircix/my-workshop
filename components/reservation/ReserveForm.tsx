@@ -11,8 +11,6 @@ interface VoucherState {
 }
 
 export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: number; remaining?: number }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -21,11 +19,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
   const [voucher, setVoucher] = useState<VoucherState>({ code: '', status: 'idle' });
 
   useEffect(() => {
-    setQuantity((q) => {
-      const max = Math.max(1, remaining);
-      const next = Math.min(Math.max(1, q), max);
-      return next;
-    });
+    setQuantity((q) => Math.min(Math.max(1, q), Math.max(1, remaining)));
   }, [remaining]);
 
   const applyVoucher = async () => {
@@ -56,12 +50,10 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
       const res = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, name, email, quantity }),
+        body: JSON.stringify({ sessionId, quantity }),
       });
       if (!res.ok) {
-        if (res.status === 409) {
-          throw new Error('Not enough spots left for this timeslot.');
-        }
+        if (res.status === 409) throw new Error('Not enough spots left for this timeslot.');
         throw new Error('Failed to create reservation');
       }
       const reservation = await res.json();
@@ -79,7 +71,6 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
       }
 
       if (data.free) {
-        // Voucher covered the full price
         window.location.href = `${window.location.origin}/reserve/success`;
         return;
       }
@@ -93,28 +84,18 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
     }
   };
 
-  const voucherIsValid = voucher.status === 'valid';
   const buttonLabel = loading
     ? 'Processing…'
-    : voucherIsValid && voucher.amountCents !== undefined
-    ? `Reserve & Pay (voucher applied)`
-    : 'Reserve & Pay';
+    : voucher.status === 'valid'
+    ? 'Book Now (voucher applied)'
+    : 'Book Now';
 
   return (
-    <div className="space-y-3 border rounded p-4">
-      <h3 className="font-medium">Your details</h3>
-      <div className="grid grid-cols-1 gap-3">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="reserve-name" className="text-sm font-medium text-gray-700">Full name</label>
-          <input id="reserve-name" className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="reserve-email" className="text-sm font-medium text-gray-700">Email address</label>
-          <input id="reserve-email" type="email" className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-      </div>
+    <div className="space-y-4">
       <div>
-        <label htmlFor="reserve-quantity" className="text-sm font-medium text-gray-700 block mb-1">Number of participants</label>
+        <label htmlFor="reserve-quantity" className="text-sm font-medium text-gray-700 block mb-1">
+          Number of participants
+        </label>
         <input
           id="reserve-quantity"
           type="number"
@@ -126,8 +107,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
           onChange={(e) => {
             const v = Number(e.target.value);
             const max = Math.max(1, remaining);
-            const clamped = Number.isFinite(v) ? Math.min(Math.max(1, v), max) : 1;
-            setQuantity(clamped);
+            setQuantity(Number.isFinite(v) ? Math.min(Math.max(1, v), max) : 1);
           }}
         />
         {remaining > 0 ? (
@@ -137,19 +117,14 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
         )}
       </div>
 
-      {/* Gift voucher toggle */}
+      {/* Gift voucher */}
       <div className="border-t pt-3">
         <button
           type="button"
           className="text-sm text-[#c99706] hover:underline focus:outline-none flex items-center gap-1"
           onClick={() => setVoucherOpen((o) => !o)}
         >
-          <svg
-            className={`w-4 h-4 transition-transform ${voucherOpen ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className={`w-4 h-4 transition-transform ${voucherOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
           Have a gift voucher?
@@ -157,7 +132,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
 
         {voucherOpen && (
           <div className="mt-2 space-y-2">
-            {voucher.status !== 'valid' ? (
+            {voucher.status !== 'valid' && (
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -179,18 +154,12 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
                   {voucher.status === 'checking' ? 'Checking…' : 'Apply'}
                 </button>
               </div>
-            ) : null}
+            )}
 
             {voucher.status === 'valid' && voucher.amountCents !== undefined && (
               <div className="flex items-center justify-between rounded bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800">
-                <span>
-                  Voucher <strong>{voucher.code}</strong> — €{(voucher.amountCents / 100).toFixed(2)} applied
-                </span>
-                <button
-                  type="button"
-                  className="ml-3 text-green-600 hover:text-green-800 underline text-xs"
-                  onClick={clearVoucher}
-                >
+                <span>Voucher <strong>{voucher.code}</strong> — €{(voucher.amountCents / 100).toFixed(2)} applied</span>
+                <button type="button" className="ml-3 text-green-600 hover:text-green-800 underline text-xs" onClick={clearVoucher}>
                   Remove
                 </button>
               </div>
@@ -204,7 +173,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
       </div>
 
       <button
-        className="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold rounded-lg px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         disabled={loading || remaining <= 0}
         onClick={submit}
       >

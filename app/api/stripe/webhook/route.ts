@@ -76,9 +76,17 @@ export async function POST(req: NextRequest) {
           const existing = await prisma.reservation.findUnique({ where: { id: reservationId } });
           const firstPaid = !(existing && existing.status === 'PAID' && existing.stripePaymentIntentId);
 
+          const customerName = session.customer_details?.name as string | undefined;
+          const customerEmail = session.customer_details?.email as string | undefined;
+
           const updated = await prisma.reservation.update({
             where: { id: reservationId },
-            data: { status: 'PAID', stripePaymentIntentId: session.payment_intent as string },
+            data: {
+              status: 'PAID',
+              stripePaymentIntentId: session.payment_intent as string,
+              ...(customerName ? { name: customerName } : {}),
+              ...(customerEmail ? { email: customerEmail } : {}),
+            },
           });
 
           // Mark voucher as USED if one was applied as partial payment
@@ -107,7 +115,7 @@ export async function POST(req: NextRequest) {
               <p>We look forward to seeing you!</p>
             `;
             // Don't block the webhook response on mail send
-            sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err));
+            if (updated.email) sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err));
           }
         }
       }
