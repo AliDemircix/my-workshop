@@ -143,10 +143,11 @@ export default async function HomePage() {
               const isAlmostFull = !isFull && remainingSpots <= 2;
               const fillPct = Math.round((reservedSpots / session.capacity) * 100);
               const sessionDate = new Date(session.date);
-              const dayNumber = sessionDate.toLocaleDateString('nl-NL', { day: 'numeric' });
-              const monthAbbr = sessionDate.toLocaleDateString('nl-NL', { month: 'short' });
-              const weekday = sessionDate.toLocaleDateString('nl-NL', { weekday: 'long' });
-              const timeStr = new Date(session.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+              const dateLocale = locale === 'en' ? 'en-GB' : locale === 'tr' ? 'tr-TR' : 'nl-NL';
+              const dayNumber = sessionDate.toLocaleDateString(dateLocale, { day: 'numeric' });
+              const monthAbbr = sessionDate.toLocaleDateString(dateLocale, { month: 'short' });
+              const weekday = sessionDate.toLocaleDateString(dateLocale, { weekday: 'long' });
+              const timeStr = new Date(session.startTime).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
 
               return (
                 <div
