@@ -121,22 +121,28 @@ export default async function HomePage() {
           
           <div className="grid gap-6 md:grid-cols-3">
             {upcomingSessions.map((session) => {
-              const reservedSpots = session.reservations.reduce((sum, r) => sum + r.quantity, 0);
-              const remainingSpots = session.capacity - reservedSpots;
-              const isAlmostFull = remainingSpots <= 2;
-              
+              const reservedSpots = session.reservations.reduce((sum, r) => (['CANCELED', 'REFUNDING', 'REFUNDED'].includes(r.status) ? sum : sum + r.quantity), 0);
+              const remainingSpots = Math.max(0, session.capacity - reservedSpots);
+              const isFull = remainingSpots === 0;
+              const isAlmostFull = !isFull && remainingSpots <= 2;
+
               return (
                 <div key={session.id} className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <div className="p-6 space-y-4">
                     <div className="flex justify-between items-start">
                       <h3 className="font-semibold text-lg text-gray-900">{session.category.name}</h3>
+                      {isFull && (
+                        <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded-full">
+                          Full
+                        </span>
+                      )}
                       {isAlmostFull && (
                         <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
                           Almost Full!
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-gray-600">
                       <div className="flex justify-between">
                         <span>Date:</span>
@@ -158,18 +164,24 @@ export default async function HomePage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Available spots:</span>
-                        <span className={`font-medium ${isAlmostFull ? 'text-red-600' : 'text-green-600'}`}>
+                        <span className={`font-medium ${isFull ? 'text-gray-500' : isAlmostFull ? 'text-red-600' : 'text-green-600'}`}>
                           {remainingSpots}/{session.capacity}
                         </span>
                       </div>
                     </div>
-                    
-                    <Link
-                      href={`/reserve?categoryId=${session.category.id}&date=${session.date.getFullYear()}-${String(session.date.getMonth() + 1).padStart(2, '0')}-${String(session.date.getDate()).padStart(2, '0')}`}
-                      className="block w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-center font-semibold py-3 rounded-lg transition-all duration-300"
-                    >
-                      Book Now
-                    </Link>
+
+                    {isFull ? (
+                      <span className="block w-full bg-gray-200 text-gray-500 text-center font-semibold py-3 rounded-lg cursor-not-allowed">
+                        Fully Booked
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/reserve?categoryId=${session.category.id}&date=${session.date.getFullYear()}-${String(session.date.getMonth() + 1).padStart(2, '0')}-${String(session.date.getDate()).padStart(2, '0')}`}
+                        className="block w-full bg-[#c99706] hover:bg-[#b8860b] text-white text-center font-semibold py-3 rounded-lg transition-all duration-300"
+                      >
+                        Book Now
+                      </Link>
+                    )}
                   </div>
                 </div>
               );
