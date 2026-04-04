@@ -338,8 +338,8 @@ export default async function HomePage() {
       {/* FAQ Section */}
       <FAQ limit={5} />
 
-      {/* Testimonials Section */}
-      <Testimonials />
+      {/* Testimonials Section — only shown when enabled in admin settings */}
+      {settings?.showTestimonials && <Testimonials />}
 
       {/* Mailing List Subscribe */}
       <MailListSubscribe />
