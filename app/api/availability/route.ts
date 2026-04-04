@@ -1,15 +1,25 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { format } from 'date-fns';
+import { z } from 'zod';
+
+const availabilitySchema = z.object({
+  categoryId: z.coerce.number().int().positive(),
+  month: z.coerce.number().int().min(0).max(11),
+  year: z.coerce.number().int().min(2020).max(2100),
+});
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const categoryId = Number(searchParams.get('categoryId'));
-  const month = Number(searchParams.get('month')); // 0-11
-  const year = Number(searchParams.get('year'));
-  if (!categoryId || isNaN(month) || isNaN(year)) {
-    return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+  const parsed = availabilitySchema.safeParse({
+    categoryId: searchParams.get('categoryId'),
+    month: searchParams.get('month'),
+    year: searchParams.get('year'),
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid params' }, { status: 400 });
   }
+  const { categoryId, month, year } = parsed.data;
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
 

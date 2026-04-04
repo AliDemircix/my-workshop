@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { parseISO, startOfMonth } from 'date-fns';
 import ReservationSidebar from './ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { useTranslations } from 'next-intl';
 
 type Category = { id: number; name: string };
 type CategoryWithMeta = { id: number; name: string; slug?: string | null; description?: string | null; imageUrl?: string | null; longDescription?: string | null };
@@ -19,6 +20,7 @@ export default function ReservationFlow({
   initialCategoryId?: number;
   initialDate?: string;
 }) {
+  const t = useTranslations('reserve');
   const [categoryId, setCategoryId] = useState<number | null>(initialCategoryId ?? null);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery<CategoryWithMeta[]>({
@@ -81,8 +83,8 @@ export default function ReservationFlow({
           </div>
         </div>
         <div>
-          <p className="text-lg font-semibold text-gray-700">No workshops available yet</p>
-          <p className="text-sm text-gray-500 mt-1">Check back soon — new sessions are added regularly.</p>
+          <p className="text-lg font-semibold text-gray-700">{t('noWorkshops')}</p>
+          <p className="text-sm text-gray-500 mt-1">{t('noWorkshopsSub')}</p>
         </div>
       </div>
     );
@@ -103,9 +105,9 @@ export default function ReservationFlow({
       {/* Step indicator */}
       <div className="flex items-center gap-2 text-sm" aria-label="Booking steps">
         {[
-          { n: 1, label: 'Choose workshop' },
-          { n: 2, label: 'Pick date & time' },
-          { n: 3, label: 'Your details' },
+          { n: 1, label: t('step1') },
+          { n: 2, label: t('step2') },
+          { n: 3, label: t('step3') },
         ].map((s, i) => (
           <div key={s.n} className="flex items-center gap-2">
             {i > 0 && <div className="w-8 h-px bg-gray-300" aria-hidden="true" />}
@@ -151,7 +153,7 @@ export default function ReservationFlow({
                         <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm">Workshop image</span>
+                        <span className="text-sm">{t('workshopImage')}</span>
                       </div>
                     )}
                   </div>
@@ -181,7 +183,7 @@ export default function ReservationFlow({
         <aside className="lg:col-span-2 order-1 lg:order-2">
           <div className="bg-white rounded-lg shadow-lg border p-6 space-y-6 lg:sticky lg:top-6">
             <div>
-              <label htmlFor="workshop-select" className="block text-sm font-semibold mb-3 text-gray-900">Choose Workshop Category</label>
+              <label htmlFor="workshop-select" className="block text-sm font-semibold mb-3 text-gray-900">{t('chooseCategory')}</label>
               <select
                 id="workshop-select"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white text-gray-900 font-medium focus:ring-2 focus:ring-[#c99706] focus:border-transparent focus-visible:outline-none transition-all duration-200"
@@ -194,7 +196,7 @@ export default function ReservationFlow({
                   setSelectedTimeslotId(null);
                 }}
               >
-                <option value="">Select a workshop...</option>
+                <option value="">{t('selectWorkshop')}</option>
                 {categories?.map((c: Category) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
