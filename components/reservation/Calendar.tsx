@@ -52,7 +52,7 @@ export default function Calendar({
                 canSelect
                   ? 'border-orange-400 text-orange-600 hover:bg-orange-50 bg-white'
                   : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed',
-                isSelected ? 'bg-orange-50 border-orange-500 text-orange-600 font-bold shadow-md' : '',
+                isSelected ? 'bg-[#c99706] border-[#c99706] text-white font-bold shadow-md' : '',
                 isPastDate ? 'opacity-50 line-through' : '',
               ].join(' ')}
             >
