@@ -74,6 +74,9 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
         body: JSON.stringify({ reservationId: reservation.id, ...(appliedCode ? { voucherCode: appliedCode } : {}) }),
       });
       const data = await checkout.json();
+      if (!checkout.ok) {
+        throw new Error(data.error || 'Payment setup failed. Please try again.');
+      }
 
       if (data.free) {
         // Voucher covered the full price

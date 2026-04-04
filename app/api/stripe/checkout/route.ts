@@ -8,6 +8,7 @@ const CHECKOUT_LIMIT = 10;
 const CHECKOUT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(req: NextRequest) {
+  try {
   const ip = getIpFromRequest(req);
   const rateLimitResult = checkRateLimit(ip, 'checkout', CHECKOUT_LIMIT, CHECKOUT_WINDOW_MS);
   if (!rateLimitResult.allowed) {
@@ -119,4 +120,8 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ url: checkout.url });
+  } catch (err: any) {
+    const message = err?.message ?? 'Stripe checkout failed';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
