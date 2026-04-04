@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 
 type Props = {
   action: (formData: FormData) => Promise<void>;
@@ -15,16 +15,30 @@ type Props = {
 
 export default function CancelReservationButton({ action, reservationId, page, perPage, sort, status, categoryId, q, disabled }: Props) {
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleConfirm = () => {
+    const formData = new FormData();
+    formData.set('id', String(reservationId));
+    formData.set('page', String(page));
+    formData.set('perPage', String(perPage));
+    formData.set('sort', sort);
+    formData.set('status', status);
+    formData.set('categoryId', categoryId);
+    formData.set('q', q);
+    setOpen(false);
+    startTransition(() => action(formData));
+  };
 
   return (
     <>
       <button
         type="button"
         className="text-red-600 underline disabled:opacity-40 disabled:cursor-not-allowed"
-        disabled={disabled}
+        disabled={disabled || isPending}
         onClick={() => setOpen(true)}
       >
-        Cancel & Refund
+        {isPending ? 'Cancelling…' : 'Cancel & Refund'}
       </button>
 
       {open && (
@@ -42,21 +56,13 @@ export default function CancelReservationButton({ action, reservationId, page, p
               >
                 Keep it
               </button>
-              <form action={action}>
-                <input type="hidden" name="id" value={reservationId} />
-                <input type="hidden" name="page" value={page} />
-                <input type="hidden" name="perPage" value={perPage} />
-                <input type="hidden" name="sort" value={sort} />
-                <input type="hidden" name="status" value={status} />
-                <input type="hidden" name="categoryId" value={categoryId} />
-                <input type="hidden" name="q" value={q} />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
-                >
-                  Yes, Cancel & Refund
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="px-4 py-2 rounded bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+              >
+                Yes, Cancel & Refund
+              </button>
             </div>
           </div>
         </div>
