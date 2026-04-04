@@ -33,8 +33,11 @@ export async function middleware(request: NextRequest) {
   // Check maintenance mode by calling the internal API endpoint.
   // The response is cached (s-maxage=15) so this does not hit the DB on every request.
   try {
-    const statusUrl = new URL('/api/internal/maintenance-status', request.nextUrl.origin);
-    const res = await fetch(statusUrl.toString(), { next: { revalidate: 15 } } as RequestInit);
+    // Use localhost to avoid going through the external reverse proxy (OpenLiteSpeed/SSL).
+    // Falls back to origin for local dev where localhost:3000 may differ.
+    const base = process.env.INTERNAL_API_BASE_URL || 'http://localhost:3000';
+    const statusUrl = `${base}/api/internal/maintenance-status`;
+    const res = await fetch(statusUrl, { next: { revalidate: 15 } } as RequestInit);
     if (res.ok) {
       const { active } = await res.json();
       if (active) {
