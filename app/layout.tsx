@@ -6,6 +6,9 @@ import Providers from '@/components/Providers';
 import Nav from '@/components/Nav';
 import { isAdminAuthenticated } from '@/lib/auth';
 import Footer from '@/components/Footer';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export const metadata = {
   title: 'Workshop Reservations',
@@ -16,9 +19,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
   const logoUrl = (settings as any)?.logoUrl as string | undefined;
   const isAdmin = isAdminAuthenticated();
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="bg-white text-gray-900">
+        <NextIntlClientProvider locale={locale} messages={messages}>
         <Providers>
           <div className="min-h-screen flex flex-col">
             {/* Sticky top navigation bar */}
@@ -33,7 +39,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                   )}
                   <span className="sr-only">Home</span>
                 </a>
-                <Nav isAdmin={isAdmin} />
+                <div className="flex items-center gap-3">
+                  <Nav isAdmin={isAdmin} />
+                  <LanguageSwitcher currentLocale={locale as 'en' | 'nl' | 'tr'} />
+                </div>
               </div>
               {/* Announcement bar — admin-editable */}
               {((settings as any)?.announcementBar ?? 'Limited-time discounts available — book early to save!') && (
@@ -54,6 +63,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Footer />
           </div>
         </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

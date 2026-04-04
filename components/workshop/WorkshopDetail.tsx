@@ -5,6 +5,7 @@ import { startOfMonth } from 'date-fns';
 import Link from 'next/link';
 import ReservationSidebar from '@/components/reservation/ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { useTranslations } from 'next-intl';
 
 type Photo = { id: number; url: string };
 
@@ -19,6 +20,8 @@ type Category = {
 };
 
 export default function WorkshopDetail({ category }: { category: Category }) {
+  const t = useTranslations('workshop');
+  const tn = useTranslations('nav');
   const categoryId = category.id;
   const [viewDate, setViewDate] = useState<Date>(startOfMonth(new Date()));
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
@@ -49,11 +52,11 @@ export default function WorkshopDetail({ category }: { category: Category }) {
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex items-center text-sm text-gray-500">
         <Link href="/" className="hover:text-[#c99706] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] rounded">
-          Home
+          {tn('home')}
         </Link>
         <span className="mx-2" aria-hidden="true">/</span>
         <Link href="/reserve" className="hover:text-[#c99706] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] rounded">
-          Workshops
+          {t('breadcrumbWorkshops')}
         </Link>
         <span className="mx-2" aria-hidden="true">/</span>
         <span className="text-gray-900 font-medium" aria-current="page">{category.name}</span>
@@ -79,11 +82,11 @@ export default function WorkshopDetail({ category }: { category: Category }) {
           )}
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">About This Workshop</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('about')}</h2>
             {(category.longDescription || category.description) ? (
               <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(category.longDescription || category.description || '') }} />
             ) : (
-              <p className="text-gray-600">No description available for this workshop.</p>
+              <p className="text-gray-600">{t('noDescription')}</p>
             )}
           </div>
 
@@ -92,7 +95,7 @@ export default function WorkshopDetail({ category }: { category: Category }) {
         {/* Right: Calendar & reservation sidebar */}
         <aside className="lg:col-span-1 space-y-4 lg:sticky lg:top-24">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Check Availability</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">{t('checkAvailability')}</h3>
             <ReservationSidebar
               availability={availability}
               viewDate={viewDate}
@@ -110,7 +113,7 @@ export default function WorkshopDetail({ category }: { category: Category }) {
       {photos.length > 0 && (
         <section aria-labelledby="event-photos-heading" className="space-y-4">
           <h2 id="event-photos-heading" className="text-xl font-semibold text-gray-900">
-            Event Photos
+            {t('eventPhotos')}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((photo, idx) => (
@@ -122,7 +125,7 @@ export default function WorkshopDetail({ category }: { category: Category }) {
               >
                 <img
                   src={photo.url}
-                  alt={`Event photo ${idx + 1}`}
+                  alt={t('photoAlt', { n: idx + 1 })}
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"

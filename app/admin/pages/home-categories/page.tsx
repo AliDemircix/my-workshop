@@ -16,39 +16,42 @@ export default async function HomeCategoriesPage() {
     requireAdminAction();
     const id = Number(formData.get('id'));
     const imageUrl = String(formData.get('imageUrl') || '').trim() || null;
-    const shortRaw = String(formData.get('shortDescription') || '').trim();
-    const shortDescription = shortRaw
-      ? sanitizeHtml(shortRaw, {
-          allowedTags: ['h1','h2','h3','h4','h5','h6','p','strong','em','u','s','blockquote','code','pre','span','ul','ol','li','br','hr','a'],
-          allowedAttributes: { a: ['href','title','target','rel'], span: ['style'], p: ['style'], h1: ['style'], h2: ['style'], h3: ['style'], h4: ['style'], h5: ['style'], h6: ['style'] },
-          allowedSchemes: ['http','https','mailto'],
-          allowProtocolRelative: false,
-          transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) }
-        }).trim()
-      : null;
-    const longRaw = String(formData.get('longDescription') || '').trim();
-    const longDescription = longRaw
-      ? sanitizeHtml(longRaw, {
-          allowedTags: ['h1','h2','h3','h4','h5','h6','p','strong','em','u','s','blockquote','code','pre','span','ul','ol','li','br','hr','a','img'],
-          allowedAttributes: { a: ['href','title','target','rel'], img: ['src','alt','title','width','height'], span: ['style'], p: ['style'], h1: ['style'], h2: ['style'], h3: ['style'], h4: ['style'], h5: ['style'], h6: ['style'] },
-          allowedSchemes: ['http','https','mailto'],
-          allowProtocolRelative: false,
-          transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) }
-        }).trim()
-      : null;
 
-    if (!id) {
-      redirect('/admin/pages/home-categories?error=' + encodeURIComponent('Missing category id'));
+    const shortAllowedTags = ['h1','h2','h3','h4','h5','h6','p','strong','em','u','s','blockquote','code','pre','span','ul','ol','li','br','hr','a'];
+    const longAllowedTags  = [...shortAllowedTags, 'img'];
+    const allowedAttrs = { a: ['href','title','target','rel'], img: ['src','alt','title','width','height'], span: ['style'], p: ['style'], h1: ['style'], h2: ['style'], h3: ['style'], h4: ['style'], h5: ['style'], h6: ['style'] };
+    const sanitizeOpts = (tags: string[]) => ({
+      allowedTags: tags,
+      allowedAttributes: allowedAttrs,
+      allowedSchemes: ['http','https','mailto'] as string[],
+      allowProtocolRelative: false,
+      transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) },
+    });
+
+    function clean(field: string, long = false): string | null {
+      const raw = String(formData.get(field) || '').trim();
+      return raw ? sanitizeHtml(raw, sanitizeOpts(long ? longAllowedTags : shortAllowedTags)).trim() || null : null;
     }
+
+    if (!id) redirect('/admin/pages/home-categories?error=' + encodeURIComponent('Missing category id'));
+
     try {
-      await prisma.category.update({ where: { id }, data: ({ imageUrl, description: shortDescription, longDescription } as any) });
-    } catch (e) {
+      await prisma.category.update({
+        where: { id },
+        data: ({
+          imageUrl,
+          description:       clean('shortDescription'),
+          descriptionEn:     clean('shortDescriptionEn'),
+          descriptionTr:     clean('shortDescriptionTr'),
+          longDescription:   clean('longDescription', true),
+          longDescriptionEn: clean('longDescriptionEn', true),
+          longDescriptionTr: clean('longDescriptionTr', true),
+        } as any),
+      });
+    } catch {
       redirect('/admin/pages/home-categories?error=1');
     }
-    // Best-effort revalidation; do not fail the save if this throws
-    try {
-      revalidatePath('/admin/pages/home-categories');
-    } catch {}
+    try { revalidatePath('/admin/pages/home-categories'); } catch {}
     redirect('/admin/pages/home-categories?saved=1');
   }
 

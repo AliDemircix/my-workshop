@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 export default function MailListSubscribe() {
+  const t = useTranslations('mailList');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,7 @@ export default function MailListSubscribe() {
         const data = await res.json();
         throw new Error(data?.error ?? 'Subscription failed');
       }
-      toast.success('You have been subscribed!');
+      toast.success(t('successMsg'));
       setEmail('');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
@@ -34,10 +36,8 @@ export default function MailListSubscribe() {
     <section className="bg-gray-50 -mx-4 px-4 py-16">
       <div className="max-w-xl mx-auto text-center space-y-6">
         <div className="space-y-2">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Stay in the Loop</h2>
-          <p className="text-gray-600">
-            Subscribe to our mailing list and be the first to hear about new workshops, special offers, and events.
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{t('title')}</h2>
+          <p className="text-gray-600">{t('subtitle')}</p>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
           <input
@@ -45,7 +45,7 @@ export default function MailListSubscribe() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email address"
+            placeholder={t('placeholder')}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#c99706] focus:outline-none focus:ring-1 focus:ring-[#c99706]"
           />
           <button
@@ -53,7 +53,7 @@ export default function MailListSubscribe() {
             disabled={loading}
             className="bg-[#c99706] hover:bg-[#b8860b] disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-lg text-sm transition-all duration-300 whitespace-nowrap"
           >
-            {loading ? 'Subscribing...' : 'Subscribe'}
+            {loading ? t('subscribing') : t('subscribe')}
           </button>
         </form>
       </div>

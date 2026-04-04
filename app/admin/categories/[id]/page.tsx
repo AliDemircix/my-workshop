@@ -21,16 +21,23 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
     'use server';
     requireAdminAction();
     const name = String(formData.get('name') || '').trim();
-    const rawDescription = String(formData.get('description') || '').trim();
-    const description = rawDescription
-      ? sanitizeHtml(rawDescription, {
-          allowedTags: ['h1','h2','h3','h4','h5','h6','p','strong','em','u','s','blockquote','code','pre','span','ul','ol','li','br','hr','a'],
-          allowedAttributes: { a: ['href','title','target','rel'], span: ['style'], p: ['style'], h1: ['style'], h2: ['style'], h3: ['style'], h4: ['style'], h5: ['style'], h6: ['style'] },
-          allowedSchemes: ['http','https','mailto'],
-          allowProtocolRelative: false,
-          transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) }
-        }).trim()
-      : null;
+
+    function sanitizeDesc(raw: string) {
+      return raw.trim()
+        ? sanitizeHtml(raw.trim(), {
+            allowedTags: ['h1','h2','h3','h4','h5','h6','p','strong','em','u','s','blockquote','code','pre','span','ul','ol','li','br','hr','a'],
+            allowedAttributes: { a: ['href','title','target','rel'], span: ['style'], p: ['style'], h1: ['style'], h2: ['style'], h3: ['style'], h4: ['style'], h5: ['style'], h6: ['style'] },
+            allowedSchemes: ['http','https','mailto'],
+            allowProtocolRelative: false,
+            transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true) }
+          }).trim() || null
+        : null;
+    }
+
+    const description   = sanitizeDesc(String(formData.get('description')   || ''));
+    const descriptionEn = sanitizeDesc(String(formData.get('descriptionEn') || ''));
+    const descriptionTr = sanitizeDesc(String(formData.get('descriptionTr') || ''));
+
     const imageUrl      = String(formData.get('imageUrl')      || '').trim() || null;
     const imageAlt      = String(formData.get('imageAlt')      || '').trim() || null;
     const imageCaption  = String(formData.get('imageCaption')  || '').trim() || null;
@@ -55,11 +62,9 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
 
     await (prisma.category as any).update({
       where: { id },
-      data: { name, description, imageUrl, imageAlt, imageCaption, imageTitle, slug: nextSlug },
+      data: { name, description, descriptionEn, descriptionTr, imageUrl, imageAlt, imageCaption, imageTitle, slug: nextSlug },
     });
     revalidatePath('/admin/categories');
-    // Return to categories list — the client form will show a success toast
-    // before navigating (task 35).
   }
 
   return (
