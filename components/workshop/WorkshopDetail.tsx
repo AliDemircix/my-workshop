@@ -21,6 +21,8 @@ type Category = {
 export default function WorkshopDetail({ category }: { category: Category }) {
   const categoryId = category.id;
   const [viewDate, setViewDate] = useState<Date>(startOfMonth(new Date()));
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [selectedTimeslotId, setSelectedTimeslotId] = useState<number | null>(null);
   const photos = category.photos ?? [];
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -91,7 +93,15 @@ export default function WorkshopDetail({ category }: { category: Category }) {
         <aside className="lg:col-span-1 space-y-4 lg:sticky lg:top-24">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
             <h3 className="font-semibold text-gray-900 mb-4">Check Availability</h3>
-            <ReservationSidebar availability={availability} viewDate={viewDate} setViewDate={(fn) => setViewDate(fn)} />
+            <ReservationSidebar
+              availability={availability}
+              viewDate={viewDate}
+              setViewDate={(fn) => setViewDate(fn)}
+              selectedDateKey={selectedDateKey}
+              setSelectedDateKey={setSelectedDateKey}
+              selectedTimeslotId={selectedTimeslotId}
+              setSelectedTimeslotId={setSelectedTimeslotId}
+            />
           </div>
         </aside>
       </div>

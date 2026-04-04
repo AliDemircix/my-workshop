@@ -34,8 +34,8 @@ export default function ReservationFlow({
 
   const initialViewDate = initialDate ? startOfMonth(parseISO(initialDate)) : startOfMonth(new Date());
   const [viewDate, setViewDate] = useState<Date>(initialViewDate);
-
-  const initialDateKey = initialDate ?? null;
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(initialDate ?? null);
+  const [selectedTimeslotId, setSelectedTimeslotId] = useState<number | null>(null);
 
   const { data: availability, isLoading: availabilityLoading } = useQuery<any>({
     queryKey: ['availability', categoryId, viewDate.getMonth(), viewDate.getFullYear()],
@@ -88,6 +88,16 @@ export default function ReservationFlow({
     );
   }
 
+  const sidebarProps = {
+    availability,
+    viewDate,
+    setViewDate: (fn: (d: Date) => Date) => setViewDate(fn),
+    selectedDateKey,
+    setSelectedDateKey,
+    selectedTimeslotId,
+    setSelectedTimeslotId,
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Step indicator */}
@@ -124,8 +134,8 @@ export default function ReservationFlow({
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8">
-        {/* Left: Category info and image (3/5 width) */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* Left: Category info and image — on mobile renders after sidebar (order-2) */}
+        <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
           {categoryId && categories && (
             (() => {
               const cat = categories.find((c: CategoryWithMeta) => c.id === categoryId);
@@ -154,15 +164,22 @@ export default function ReservationFlow({
                       )}
                     </div>
                   )}
+
+                  {/* Mobile-only: repeat calendar after description so user doesn't need to scroll back up */}
+                  {!availabilityLoading && (
+                    <div className="lg:hidden bg-white rounded-lg shadow-lg border p-6">
+                      <ReservationSidebar {...sidebarProps} />
+                    </div>
+                  )}
                 </div>
               );
             })()
           )}
         </div>
 
-        {/* Right: Booking sidebar (2/5 width) */}
-        <aside className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-lg border p-6 space-y-6 sticky top-6">
+        {/* Right: Booking sidebar — on mobile renders first (order-1) */}
+        <aside className="lg:col-span-2 order-1 lg:order-2">
+          <div className="bg-white rounded-lg shadow-lg border p-6 space-y-6 lg:sticky lg:top-6">
             <div>
               <label htmlFor="workshop-select" className="block text-sm font-semibold mb-3 text-gray-900">Choose Workshop Category</label>
               <select
@@ -173,6 +190,8 @@ export default function ReservationFlow({
                   const v = e.target.value ? Number(e.target.value) : null;
                   setCategoryId(v);
                   setViewDate(startOfMonth(new Date()));
+                  setSelectedDateKey(null);
+                  setSelectedTimeslotId(null);
                 }}
               >
                 <option value="">Select a workshop...</option>
@@ -193,12 +212,7 @@ export default function ReservationFlow({
             )}
 
             {categoryId && !availabilityLoading && (
-              <ReservationSidebar
-                availability={availability}
-                viewDate={viewDate}
-                setViewDate={(fn) => setViewDate(fn)}
-                initialDateKey={initialDateKey}
-              />
+              <ReservationSidebar {...sidebarProps} />
             )}
           </div>
         </aside>

@@ -1,6 +1,5 @@
 "use client";
 import { addMonths, format } from 'date-fns';
-import { useMemo, useState } from 'react';
 import Calendar from './Calendar';
 import ReserveForm from './ReserveForm';
 import { formatEUR } from '@/lib/currency';
@@ -9,17 +8,20 @@ export default function ReservationSidebar({
   availability,
   viewDate,
   setViewDate,
-  initialDateKey,
+  selectedDateKey,
+  setSelectedDateKey,
+  selectedTimeslotId,
+  setSelectedTimeslotId,
 }: {
   availability: any | null;
   viewDate: Date;
-  setViewDate: (d: (d: Date) => Date) => void;
-  initialDateKey?: string | null;
+  setViewDate: (fn: (d: Date) => Date) => void;
+  selectedDateKey: string | null;
+  setSelectedDateKey: (key: string | null) => void;
+  selectedTimeslotId: number | null;
+  setSelectedTimeslotId: (id: number | null) => void;
 }) {
-  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(initialDateKey ?? null);
-  const [selectedTimeslotId, setSelectedTimeslotId] = useState<number | null>(null);
-
-  const dates = useMemo(() => (availability ? Object.keys(availability) : []), [availability]);
+  const dates = availability ? Object.keys(availability) : [];
   const times = selectedDateKey && availability ? availability[selectedDateKey]?.times ?? [] : [];
 
   return (
@@ -73,10 +75,10 @@ export default function ReservationSidebar({
                 key={t.id}
                 disabled={t.remaining <= 0}
                 className={`w-full border rounded-lg px-4 py-3 flex items-center justify-between transition-all duration-200 ${
-                  selectedTimeslotId === t.id 
-                    ? 'bg-[#c99706] border-[#c99706] text-white shadow-md' 
-                    : t.remaining <= 0 
-                    ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed' 
+                  selectedTimeslotId === t.id
+                    ? 'bg-[#c99706] border-[#c99706] text-white shadow-md'
+                    : t.remaining <= 0
+                    ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-white border-gray-300 hover:border-[#c99706] hover:bg-orange-50'
                 }`}
                 onClick={() => {
@@ -103,7 +105,7 @@ export default function ReservationSidebar({
               </button>
             ))}
           </div>
-          
+
           {selectedTimeslotId && (() => {
             const sel = times.find((x: any) => x.id === selectedTimeslotId);
             const remaining = sel?.remaining ?? 0;
