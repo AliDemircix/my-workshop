@@ -49,9 +49,9 @@ export default function Calendar({
               className={[
                 'aspect-square rounded-lg border flex items-center justify-center text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-1',
                 inMonth ? '' : 'opacity-40',
-                canSelect
+                canSelect && !isSelected
                   ? 'border-orange-400 text-orange-600 hover:bg-orange-50 bg-white'
-                  : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed',
+                  : !isSelected ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed' : '',
                 isSelected ? 'bg-[#c99706] border-[#c99706] text-white font-bold shadow-md' : '',
                 isPastDate ? 'opacity-50 line-through' : '',
               ].join(' ')}
