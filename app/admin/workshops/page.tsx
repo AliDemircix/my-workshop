@@ -9,10 +9,12 @@ import WorkshopsToast from '@/components/admin/WorkshopsToast';
 import AddWorkshopDialog from '@/components/admin/AddWorkshopDialog';
 import { requireAdminAction } from '@/lib/auth';
 
-export default async function WorkshopsPage({ searchParams }: { searchParams?: { error?: string; page?: string } }) {
+export default async function WorkshopsPage({ searchParams }: { searchParams?: { error?: string; page?: string; categoryId?: string } }) {
   const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
   const pageSize = 10;
   const currentPage = Math.max(1, Number(searchParams?.page || 1));
+  const activeCategoryId = searchParams?.categoryId ? Number(searchParams.categoryId) : (categories[0]?.id ?? undefined);
+  const categoryFilter = activeCategoryId ? { categoryId: activeCategoryId } : undefined;
 
   async function createSession(formData: FormData) {
     'use server';
@@ -71,12 +73,13 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
     redirect(`/admin/workshops?page=${page}`);
   }
 
-  const totalCount = await prisma.session.count();
+  const totalCount = await prisma.session.count({ where: categoryFilter });
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const page = Math.min(currentPage, totalPages);
   const skip = (page - 1) * pageSize;
 
   const sessions = await prisma.session.findMany({
+    where: categoryFilter,
     include: {
       category: true,
       _count: { select: { reservations: true } },
@@ -107,6 +110,28 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
         </div>
         <AddWorkshopDialog action={createSession} categories={categories} />
       </div>
+
+      {categories.length > 0 && (
+        <div className="flex gap-1 border-b border-gray-200">
+          {categories.map((cat) => {
+            const isActive = cat.id === activeCategoryId;
+            return (
+              <Link
+                key={cat.id}
+                href={`/admin/workshops?categoryId=${cat.id}&page=1`}
+                className={[
+                  'px-4 py-2 text-sm rounded-t',
+                  isActive
+                    ? 'font-semibold bg-white border-b-2 border-[#c99706] -mb-px text-[#c99706]'
+                    : 'text-gray-600 hover:bg-gray-50 border-b-2 border-transparent',
+                ].join(' ')}
+              >
+                {cat.name}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
@@ -220,18 +245,18 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
           Showing {totalCount === 0 ? 0 : skip + 1}–{Math.min(skip + sessions.length, totalCount)} of {totalCount}
         </div>
         <div className="flex items-center gap-1">
-          <PaginationLink href={`/admin/workshops?page=${Math.max(1, page - 1)}` } disabled={page <= 1}>
+          <PaginationLink href={`/admin/workshops?categoryId=${activeCategoryId}&page=${Math.max(1, page - 1)}`} disabled={page <= 1}>
             Previous
           </PaginationLink>
           {Array.from({ length: totalPages }).map((_, idx) => {
             const p = idx + 1;
             return (
-              <PaginationLink key={p} href={`/admin/workshops?page=${p}`} active={p === page}>
+              <PaginationLink key={p} href={`/admin/workshops?categoryId=${activeCategoryId}&page=${p}`} active={p === page}>
                 {p}
               </PaginationLink>
             );
           })}
-          <PaginationLink href={`/admin/workshops?page=${Math.min(totalPages, page + 1)}` } disabled={page >= totalPages}>
+          <PaginationLink href={`/admin/workshops?categoryId=${activeCategoryId}&page=${Math.min(totalPages, page + 1)}`} disabled={page >= totalPages}>
             Next
           </PaginationLink>
         </div>
