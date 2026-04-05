@@ -80,7 +80,7 @@ export default function AddWorkshopDialog({
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">Start time</label>
-                <input name="startTime" className="border rounded px-2 py-2" type="time" defaultValue="12:00" required />
+                <input name="startTime" className="border rounded px-2 py-2" type="time" defaultValue="13:00" required />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">End time</label>
@@ -88,11 +88,11 @@ export default function AddWorkshopDialog({
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">Capacity</label>
-                <input name="capacity" className="border rounded px-2 py-2" type="number" min="1" placeholder="Seats" defaultValue="5" required />
+                <input name="capacity" className="border rounded px-2 py-2" type="number" min="1" placeholder="Seats" defaultValue="6" required />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">Price (EUR)</label>
-                <input name="price" className="border rounded px-2 py-2" type="number" step="0.01" min="0.01" placeholder="e.g. 40" defaultValue="40" required />
+                <input name="price" className="border rounded px-2 py-2" type="number" step="0.01" min="0.01" placeholder="e.g. 50" defaultValue="50" required />
               </div>
               <div className="md:col-span-3 flex items-center justify-end gap-2 pt-2">
                 <button type="button" className="px-4 py-2 rounded border" onClick={() => setOpen(false)}>
