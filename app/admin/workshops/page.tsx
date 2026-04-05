@@ -53,7 +53,7 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
 
   await prisma.session.create({ data: { categoryId, date, startTime: start, endTime: end, capacity, priceCents } });
   revalidatePath('/admin/workshops');
-  redirect('/admin/workshops?added=1');
+  redirect(`/admin/workshops?categoryId=${categoryId}&added=1`);
   }
 
   async function deleteSession(formData: FormData) {
@@ -108,7 +108,7 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
         <div className="text-sm text-gray-700">
           Total sessions: <span className="font-semibold">{totalCount}</span>
         </div>
-        <AddWorkshopDialog action={createSession} categories={categories} />
+        <AddWorkshopDialog action={createSession} categories={categories} defaultCategoryId={activeCategoryId} />
       </div>
 
       {categories.length > 0 && (

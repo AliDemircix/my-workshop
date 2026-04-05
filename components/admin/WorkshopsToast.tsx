@@ -11,13 +11,15 @@ export default function WorkshopsToast() {
   useEffect(() => {
     const added = search.get('added');
     const error = search.get('error');
+    const categoryId = search.get('categoryId');
+    const cleanUrl = categoryId ? `${pathname}?categoryId=${categoryId}` : pathname;
     if (added === '1') {
       toast.success('Workshop added');
-      router.replace(pathname);
+      router.replace(cleanUrl);
     } else if (error) {
       const message = error === '1' ? 'Operation failed' : decodeURIComponent(error);
       toast.error(message);
-      router.replace(pathname);
+      router.replace(cleanUrl);
     }
   }, [search, router, pathname]);
 

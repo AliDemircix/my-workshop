@@ -4,13 +4,20 @@ import { useEffect, useRef, useState } from 'react';
 export default function AddWorkshopDialog({
   action,
   categories,
+  defaultCategoryId,
 }: {
   action: (formData: FormData) => void;
   categories: { id: number; name: string }[];
+  defaultCategoryId?: number;
 }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [minDate, setMinDate] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(defaultCategoryId ?? categories[0]?.id);
+
+  useEffect(() => {
+    setSelectedCategoryId(defaultCategoryId ?? categories[0]?.id);
+  }, [defaultCategoryId]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -65,7 +72,13 @@ export default function AddWorkshopDialog({
             <form action={action} onSubmit={() => setOpen(false)} className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1 md:col-span-3">
                 <label className="text-sm font-medium">Category</label>
-                <select name="categoryId" className="border rounded px-2 py-2" required>
+                <select
+                  name="categoryId"
+                  className="border rounded px-2 py-2"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(Number(e.target.value))}
+                  required
+                >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
