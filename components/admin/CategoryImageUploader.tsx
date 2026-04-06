@@ -8,11 +8,15 @@ export default function CategoryImageUploader({
   initialUrl,
   categoryName,
   onUpload,
+  folder = 'categories',
+  inputName = 'imageUrl',
 }: {
   initialUrl?: string | null;
   categoryName?: string;
   /** Called with the new URL after a successful upload, or null after removal. */
   onUpload?: (url: string | null) => void;
+  folder?: string;
+  inputName?: string;
 }) {
   const [url, setUrl] = useState<string>(initialUrl ?? '');
   const [uploading, setUploading] = useState(false);
@@ -36,7 +40,7 @@ export default function CategoryImageUploader({
     try {
       // If there is already an uploaded image, delete it before uploading the
       // new one so we do not leave orphaned files on disk (task 34).
-      if (url && url.startsWith('/uploads/categories/')) {
+      if (url && url.startsWith(`/uploads/${folder}/`)) {
         const delRes = await fetch('/api/admin/upload/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -50,7 +54,7 @@ export default function CategoryImageUploader({
 
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'categories');
+      fd.append('folder', folder);
       if (categoryName) fd.append('name', categoryName);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
       const data = await res.json();
@@ -66,7 +70,7 @@ export default function CategoryImageUploader({
   }
 
   async function removeImage() {
-    if (url.startsWith('/uploads/categories/')) {
+    if (url.startsWith(`/uploads/${folder}/`)) {
       // Task 45: handle delete API errors instead of silently orphaning the file.
       try {
         const res = await fetch('/api/admin/upload/delete', {
@@ -91,7 +95,7 @@ export default function CategoryImageUploader({
   return (
     <div className="space-y-2">
       {/* Hidden input carries the URL into the server action form */}
-      <input type="hidden" name="imageUrl" value={url} />
+      <input type="hidden" name={inputName} value={url} />
 
       {url ? (
         <div className="relative inline-block group">

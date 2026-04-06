@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminAction } from '@/lib/auth';
 import SettingsToast from '@/components/admin/SettingsToast';
+import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,11 +11,9 @@ async function saveBranding(formData: FormData) {
   'use server';
   requireAdminAction();
   const get = (k: string) => String(formData.get(k) ?? '').trim();
-  const addHttps = (v: string) =>
-    v && !/^(?:https?:\/\/|\/)/.test(v) ? `https://${v}` : v;
 
   const data = {
-    logoUrl: addHttps(get('logoUrl')),
+    logoUrl: get('logoUrl'),
     announcementBar: get('announcementBar'),
   };
 
@@ -65,32 +64,11 @@ export default async function BrandingSettingsPage() {
 
         <section className="border rounded p-4">
           <h2 className="font-semibold mb-3">Logo</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="logoUrl" className="text-sm font-medium text-gray-700">Site logo image URL</label>
-              <input
-                id="logoUrl"
-                name="logoUrl"
-                type="url"
-                className="border rounded px-3 py-2"
-                placeholder="https://example.com/logo.png"
-                defaultValue={logoUrl}
-              />
-            </div>
-            <div className="text-sm text-gray-500 md:col-span-2 flex items-center gap-3">
-              <span>Preview:</span>
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt="Logo preview"
-                  className="h-8 w-auto border rounded bg-white p-1"
-                />
-              ) : (
-                <span className="text-gray-400">No logo set</span>
-              )}
-            </div>
-          </div>
+          <CategoryImageUploader
+            initialUrl={logoUrl}
+            folder="branding"
+            inputName="logoUrl"
+          />
         </section>
 
         <div>

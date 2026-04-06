@@ -6,7 +6,7 @@ import { slugify } from '@/lib/slug';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE_BYTES = 4 * 1024 * 1024; // 4 MB
-const ALLOWED_FOLDERS = ['slider', 'categories'] as const;
+const ALLOWED_FOLDERS = ['slider', 'categories', 'branding'] as const;
 type Folder = (typeof ALLOWED_FOLDERS)[number];
 
 export async function POST(req: NextRequest) {
