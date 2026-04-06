@@ -1,5 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { sanitizeHtml } from '@/lib/sanitize';
+import type { Metadata } from 'next';
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Refund Policy',
+  description:
+    'Learn about the Giftoria Workshops cancellation and refund policy — including deadlines, eligibility, and how refunds are processed.',
+  alternates: {
+    canonical: `${baseUrl}/refund`,
+  },
+};
 
 export default async function RefundPolicyPage() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } }).catch(() => null as any);

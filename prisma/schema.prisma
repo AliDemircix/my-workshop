@@ -67,6 +67,7 @@ model Reservation {
   updatedAt                 DateTime  @updatedAt
   canceledAt                DateTime?
   refundId                  String?
+  expiresAt                 DateTime?
 }
 
 model GiftVoucher {

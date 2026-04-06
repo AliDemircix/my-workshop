@@ -23,9 +23,16 @@ export async function GET(req: NextRequest) {
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
+  const now = new Date();
   const sessions = await prisma.session.findMany({
     where: { categoryId, date: { gte: start, lte: end } },
-    include: { reservations: true },
+    include: {
+      reservations: {
+        where: {
+          NOT: { status: 'PENDING', expiresAt: { lt: now } },
+        },
+      },
+    },
   });
 
   type TimeInfo = { id: number; start: string; end: string; priceCents: number; remaining: number };

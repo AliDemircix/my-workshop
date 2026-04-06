@@ -1,5 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { sanitizeHtml } from '@/lib/sanitize';
+import type { Metadata } from 'next';
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'Read the Giftoria Workshops privacy policy to learn how we collect, use, and protect your personal data.',
+  alternates: {
+    canonical: `${baseUrl}/privacy-policy`,
+  },
+};
 
 export default async function PrivacyPolicyPage() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } }).catch(() => null as any);

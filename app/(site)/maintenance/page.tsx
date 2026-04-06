@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Under Maintenance — Giftoria Workshops',
   description: 'We are currently performing scheduled maintenance. We will be back shortly.',
+  robots: { index: false, follow: false },
 };
 
 const DEFAULT_MESSAGE =

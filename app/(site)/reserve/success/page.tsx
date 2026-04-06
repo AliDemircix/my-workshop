@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
   title: 'Booking Confirmed — Giftoria Workshops',
+  robots: { index: false, follow: false },
 };
 
 export default async function SuccessPage() {

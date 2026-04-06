@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
-export default function Slider({ images = [] as string[] }) {
+export default function Slider({ images = [] as string[], categoryName }: { images?: string[]; categoryName?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<HTMLDivElement[]>([]);
   const wasDraggingRef = useRef(false);
@@ -102,12 +103,12 @@ export default function Slider({ images = [] as string[] }) {
             className="snap-start min-w-[80%] sm:min-w-[60%] md:min-w-[50%] lg:min-w-[33.3333%]"
           >
             <div className="w-full h-64 sm:h-72 md:h-80 lg:h-96 rounded overflow-hidden border group/item relative">
-              <img
+              <Image
                 src={src}
-                alt={`Workshop creation ${i + 1}`}
-                loading={i < 3 ? 'eager' : 'lazy'}
-                decoding="async"
-                className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover/item:scale-105 group-hover/item:rotate-1"
+                alt={categoryName ? `${categoryName} workshop — gallery photo ${i + 1}` : `Workshop gallery photo ${i + 1}`}
+                fill
+                sizes="(max-width: 640px) 80vw, (max-width: 768px) 60vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-300 ease-out group-hover/item:scale-105 group-hover/item:rotate-1"
                 onClick={() => {
                   if (wasDraggingRef.current) {
                     wasDraggingRef.current = false;
@@ -178,7 +179,7 @@ export default function Slider({ images = [] as string[] }) {
               ✕
             </button>
             <div className="w-full rounded">
-              <img src={images[lightboxIndex]} alt={`Preview ${lightboxIndex + 1}`} className="w-full h-auto max-h-[80vh] object-contain rounded" />
+              <img src={images[lightboxIndex]} alt={categoryName ? `${categoryName} workshop — gallery photo ${lightboxIndex + 1}` : `Workshop gallery photo ${lightboxIndex + 1}`} className="w-full h-auto max-h-[80vh] object-contain rounded" />
             </div>
             {/* Lightbox prev/next */}
             <button

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import Image from 'next/image';
 import Slider from '@/components/Slider';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
@@ -11,21 +12,41 @@ import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Giftoria Workshops — Epoxy Jewelry, Earrings & Necklaces in Leiden',
-  description: 'Make your own epoxy earrings, necklaces and other epoxy products in Leiden. Beginner-friendly workshops, all materials included, small groups. Book your spot today!',
-  openGraph: {
-    title: 'Giftoria Workshops — Epoxy Jewelry, Earrings & Necklaces in Leiden',
-    description: 'Make your own epoxy earrings, necklaces and other epoxy products in Leiden. Beginner-friendly workshops, all materials included, small groups. Book your spot today!',
-    type: 'website',
-    locale: 'nl_NL',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Giftoria Workshops — Epoxy Jewelry, Earrings & Necklaces in Leiden',
-    description: 'Make your own epoxy earrings, necklaces and other epoxy products in Leiden. Beginner-friendly workshops, all materials included, small groups. Book your spot today!',
-  },
+const localeMap: Record<string, string> = {
+  en: 'en_GB',
+  nl: 'nl_NL',
+  tr: 'tr_TR',
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const ogLocale = localeMap[locale] ?? 'nl_NL';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+  const title = 'Giftoria Workshops — Epoxy Jewelry, Earrings & Necklaces in Leiden';
+  const description =
+    'Make your own epoxy earrings, necklaces and other epoxy products in Leiden. Beginner-friendly workshops, all materials included, small groups. Book your spot today!';
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/`,
+      type: 'website',
+      locale: ogLocale,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 export default async function HomePage() {
   // Fetch data for the home page
@@ -72,8 +93,46 @@ export default async function HomePage() {
 
   const sliderImages = settings?.sliderImages?.map(img => img.url) ?? [];
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'Giftoria Workshops',
+    description:
+      'Epoxy jewelry workshops in Leiden — make your own earrings, necklaces and more with real dried flowers. Beginner-friendly, all materials included.',
+    url: appUrl,
+    telephone: settings?.telephone ?? undefined,
+    ...(settings?.address
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: settings.address,
+            addressLocality: 'Leiden',
+            addressCountry: 'NL',
+          },
+        }
+      : {
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Leiden',
+            addressCountry: 'NL',
+          },
+        }),
+    sameAs: [
+      settings?.instagramUrl,
+      settings?.facebookUrl,
+      settings?.youtubeUrl,
+      'https://giftoria.nl',
+    ].filter(Boolean),
+  };
+
   return (
     <main className="space-y-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 -mx-4 px-4 py-16 md:py-24">
         <div className="absolute inset-0 bg-[url('/hero-pattern.svg')] opacity-5"></div>
@@ -305,13 +364,13 @@ export default async function HomePage() {
                   <div className="relative w-full aspect-[16/10] overflow-hidden">
                     {category.imageUrl ? (
                       <>
-                        <img
+                        <Image
                           src={category.imageUrl}
                           alt={(category as any).imageAlt || category.name}
                           title={(category as any).imageTitle || undefined}
-                          loading={idx < 3 ? 'eager' : 'lazy'}
-                          decoding={idx < 3 ? 'sync' : 'async'}
-                          className="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
                         {/* Base gradient: always present */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
