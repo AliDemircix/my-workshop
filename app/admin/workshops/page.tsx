@@ -68,6 +68,30 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
       }
     }
 
+    // Check for time conflicts on each date before writing anything
+    for (const dateStr of dateStrings) {
+      const date = new Date(`${dateStr}T00:00:00`);
+      const start = new Date(`${dateStr}T${startStr}:00`);
+      const end = new Date(`${dateStr}T${endStr}:00`);
+      const conflict = await prisma.session.findFirst({
+        where: {
+          date,
+          startTime: { lt: end },
+          endTime: { gt: start },
+        },
+        include: { category: true },
+      });
+      if (conflict) {
+        const conflictStart = conflict.startTime.toTimeString().slice(0, 5);
+        const conflictEnd = conflict.endTime.toTimeString().slice(0, 5);
+        return redirect(
+          `/admin/workshops?categoryId=${categoryId}&error=${encodeURIComponent(
+            `${dateStr} conflicts with "${conflict.category.name}" (${conflictStart}–${conflictEnd})`
+          )}`
+        );
+      }
+    }
+
     // Create one session per selected date
     for (const dateStr of dateStrings) {
       const date = new Date(`${dateStr}T00:00:00`);
