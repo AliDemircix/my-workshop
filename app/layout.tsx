@@ -54,8 +54,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <header className="sticky top-0 z-50 bg-black text-white">
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <a href="/" className="inline-flex items-center gap-2" aria-label="Home">
+                  {/* eslint-disable @next/next/no-img-element */}
                   {logoUrl ? (
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={logoUrl} alt="Site logo" className="h-8 w-auto" />
                   ) : (
                     <span className="text-lg font-semibold tracking-wide">Giftoria</span>
