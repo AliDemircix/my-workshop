@@ -8,7 +8,6 @@ import Footer from '@/components/Footer';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import Image from 'next/image';
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -56,7 +55,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <a href="/" className="inline-flex items-center gap-2" aria-label="Home">
                   {logoUrl ? (
-                    <Image src={logoUrl} alt="Site logo" height={32} width={120} className="h-8 w-auto" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logoUrl} alt="Site logo" className="h-8 w-auto" />
                   ) : (
                     <span className="text-lg font-semibold tracking-wide">Giftoria</span>
                   )}

@@ -44,11 +44,21 @@ export async function POST(req: NextRequest) {
     : `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const uploadDir = join(process.cwd(), 'public', 'uploads', folder);
-  await mkdir(uploadDir, { recursive: true });
+  try {
+    await mkdir(uploadDir, { recursive: true });
+  } catch (err: any) {
+    console.error('[upload] mkdir failed:', uploadDir, err?.message);
+    return NextResponse.json({ error: `Cannot create upload directory: ${err?.message}` }, { status: 500 });
+  }
   const filePath = join(uploadDir, filename);
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
+  try {
+    await writeFile(filePath, buffer);
+  } catch (err: any) {
+    console.error('[upload] writeFile failed:', filePath, err?.message);
+    return NextResponse.json({ error: `Cannot write file: ${err?.message}` }, { status: 500 });
+  }
 
   return NextResponse.json({ url: `/uploads/${folder}/${filename}` });
 }

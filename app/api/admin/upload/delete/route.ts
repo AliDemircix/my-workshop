@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const { url } = await req.json() as { url: string };
 
   // Only allow deleting from our managed upload folders
-  if (!url || !/^\/uploads\/(slider|categories)\//.test(url)) {
+  if (!url || !/^\/uploads\/(slider|categories|branding)\//.test(url)) {
     return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 
