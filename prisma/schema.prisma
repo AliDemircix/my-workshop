@@ -143,6 +143,17 @@ model SiteSettings {
   updatedAt      DateTime @updatedAt
 }
 
+model WebhookEvent {
+  id            String    @id @default(cuid())
+  stripeEventId String    @unique
+  type          String
+  status        String    // "PROCESSED" | "FAILED"
+  errorMessage  String?
+  payload       String    // JSON stringified
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+}
+
 // Slider images for the Reserve page
 model SiteSliderImage {
   id             Int          @id @default(autoincrement())

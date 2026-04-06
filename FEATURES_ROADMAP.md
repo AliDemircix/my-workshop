@@ -10,7 +10,7 @@
 
 | Sprint | Theme | Duration | Status |
 |--------|-------|----------|--------|
-| Sprint 1 | Data Integrity & Critical Fixes | 1 week | Planned |
+| Sprint 1 | Data Integrity & Critical Fixes | 1 week | **Completed** |
 | Sprint 2 | Customer Self-Service | 2 weeks | Planned |
 | Sprint 3 | Admin Business Intelligence | 2 weeks | Planned |
 | Sprint 4 | Booking Experience Upgrades | 2 weeks | Planned |
@@ -26,14 +26,14 @@ These are active bugs or data integrity issues affecting the live system now.
 
 ### Tasks
 
-- [ ] **FEAT-01** — Reservation expiry cleanup job
+- [x] **FEAT-01** — Reservation expiry cleanup job
   - Create a `GET /api/cron/expire-reservations` endpoint that cancels PENDING reservations older than 30 min with no confirmed payment
   - Add `expiresAt DateTime?` to `Reservation` model and set it on creation (`createdAt + 30m`)
   - Update availability query in `GET /api/availability` to exclude expired reservations
   - Run via external cron (Vercel Cron Jobs / Railway cron) on a 15-minute interval
   - **Files:** `app/api/cron/expire-reservations/route.ts` (new), `app/api/availability/route.ts`, `prisma/schema.prisma`
 
-- [ ] **FEAT-02** — Webhook dead-letter logging
+- [x] **FEAT-02** — Webhook dead-letter logging
   - Add `WebhookEvent` model: `{ id, stripeEventId, type, status, errorMessage?, payload Json, processedAt?, createdAt }`
   - In `POST /api/stripe/webhook`, write a log entry before processing and update status after
   - Add a read-only admin page at `app/admin/webhook-events/page.tsx` listing recent events with status badges

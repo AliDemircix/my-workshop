@@ -20,9 +20,38 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature');
   const buf = await req.arrayBuffer();
   const body = Buffer.from(buf);
-  try {
-    const event = stripe.webhooks.constructEvent(body, sig || '', process.env.STRIPE_WEBHOOK_SECRET || '');
 
+  let event: ReturnType<typeof stripe.webhooks.constructEvent>;
+  try {
+    event = stripe.webhooks.constructEvent(body, sig || '', process.env.STRIPE_WEBHOOK_SECRET || '');
+  } catch (err: any) {
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  }
+
+  // Upsert a WebhookEvent record for this Stripe event (idempotency + audit trail).
+  // We create it as PROCESSED optimistically; on failure we update to FAILED.
+  const webhookRecord = await prisma.webhookEvent.upsert({
+    where: { stripeEventId: event.id },
+    create: {
+      stripeEventId: event.id,
+      type: event.type,
+      status: 'PROCESSED',
+      payload: JSON.stringify(event),
+      processedAt: new Date(),
+    },
+    update: {},
+  });
+
+  // If a record already existed (i.e. update ran, not create), the event was
+  // already processed — return early to honour idempotency.
+  if (webhookRecord.status === 'PROCESSED' && webhookRecord.processedAt !== null) {
+    const createdJustNow = Date.now() - webhookRecord.createdAt.getTime() < 5000;
+    if (!createdJustNow) {
+      return NextResponse.json({ received: true, skipped: true });
+    }
+  }
+
+  try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as any;
 
@@ -156,6 +185,17 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err: any) {
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    // Mark the webhook event as failed so admins can identify stuck events.
+    await prisma.webhookEvent.update({
+      where: { stripeEventId: event.id },
+      data: {
+        status: 'FAILED',
+        errorMessage: String(err?.message ?? err),
+        processedAt: null,
+      },
+    });
+    console.error(`Webhook processing failed for event ${event.id}:`, err);
+    // Return 500 so Stripe will retry the event.
+    return new NextResponse(`Webhook processing error: ${err.message}`, { status: 500 });
   }
 }
