@@ -46,8 +46,9 @@ export async function POST(req: NextRequest) {
   const remaining = session.capacity - reserved;
   if (quantity > remaining) return NextResponse.json({ error: 'Not enough slots' }, { status: 409 });
 
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
   const reservation = await prisma.reservation.create({
-    data: { sessionId, quantity, name: '', email: '' },
+    data: { sessionId, quantity, name: '', email: '', expiresAt },
   });
 
 

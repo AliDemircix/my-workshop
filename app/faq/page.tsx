@@ -1,15 +1,42 @@
-"use client";
-
+import type { Metadata } from 'next';
 import FAQ from '@/components/FAQ';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 
-export default function FAQPage() {
-  const t = useTranslations('faq');
-  const tn = useTranslations('nav');
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Frequently Asked Questions',
+  description:
+    'Find answers to the most common questions about Giftoria workshops — booking, cancellations, group sizes, materials, and more.',
+  alternates: {
+    canonical: `${baseUrl}/faq`,
+  },
+};
+
+export default async function FAQPage() {
+  const t = await getTranslations('faq');
+  const tn = await getTranslations('nav');
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+      '@type': 'Question',
+      name: t(`q${n}` as any),
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: t(`a${n}` as any),
+      },
+    })),
+  };
 
   return (
     <main className="space-y-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center text-sm text-gray-500">
         <Link href="/" className="hover:text-[#c99706] transition-colors">

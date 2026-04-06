@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { parseISO, startOfMonth } from 'date-fns';
+import Image from 'next/image';
 import ReservationSidebar from './ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useTranslations } from 'next-intl';
@@ -145,9 +146,9 @@ export default function ReservationFlow({
               const desc = cat?.description;
               return (
                 <div className="space-y-4">
-                  <div className="w-full aspect-[16/9] rounded-lg border bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
+                  <div className="relative w-full aspect-[16/9] rounded-lg border bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
                     {url ? (
-                      <img src={url} alt={cat?.name || 'Category image'} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                      <Image src={url} alt={cat?.name || 'Category image'} fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
                     ) : (
                       <div className="flex flex-col items-center justify-center text-gray-500 space-y-2">
                         <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">

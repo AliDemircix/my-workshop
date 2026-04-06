@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
   title: 'Payment Cancelled — Giftoria Workshops',
+  robots: { index: false, follow: false },
 };
 
 export default async function CancelPage() {

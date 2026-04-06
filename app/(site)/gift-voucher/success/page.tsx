@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Gift Card Purchased!',
+  title: 'Gift Card Purchased! — Giftoria Workshops',
+  robots: { index: false, follow: false },
 };
 
 export default function GiftVoucherSuccessPage() {

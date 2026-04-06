@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { startOfMonth } from 'date-fns';
 import Link from 'next/link';
+import Image from 'next/image';
 import ReservationSidebar from '@/components/reservation/ReservationSidebar';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { useTranslations } from 'next-intl';
@@ -70,13 +71,14 @@ export default function WorkshopDetail({ category }: { category: Category }) {
         {/* Left: image + description */}
         <div className="lg:col-span-2 space-y-6">
           {category.imageUrl && (
-            <div className="w-full aspect-[16/9] rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-              <img
+            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+              <Image
                 src={category.imageUrl}
                 alt={(category as any).imageAlt || category.name}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 66vw"
+                className="object-cover"
               />
             </div>
           )}
@@ -123,13 +125,15 @@ export default function WorkshopDetail({ category }: { category: Category }) {
                 className="block aspect-square rounded-xl overflow-hidden border border-gray-100 shadow-sm
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] cursor-zoom-in"
               >
-                <img
-                  src={photo.url}
-                  alt={t('photoAlt', { n: idx + 1 })}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={photo.url}
+                    alt={`${category.name} — workshop photo ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover transition-transform duration-200 hover:scale-105"
+                  />
+                </div>
               </button>
             ))}
           </div>

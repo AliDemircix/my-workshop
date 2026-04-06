@@ -1,4 +1,16 @@
 import { prisma } from '@/lib/prisma';
+import type { Metadata } from 'next';
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Contact Us',
+  description:
+    'Get in touch with Giftoria Workshops. Find our address, phone number, email, and business hours. We respond within 1–2 business days.',
+  alternates: {
+    canonical: `${baseUrl}/contact`,
+  },
+};
 
 export default function ContactPage() {
   return (

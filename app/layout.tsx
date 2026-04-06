@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import './globals.css';
 import type { ReactNode } from 'react';
 import { prisma } from '@/lib/prisma';
@@ -9,10 +8,35 @@ import Footer from '@/components/Footer';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Image from 'next/image';
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 export const metadata = {
-  title: 'Workshop Reservations',
-  description: 'Book an epoxy workshop session',
+  title: {
+    default: 'Giftoria Workshops — Epoxy Jewelry & Creative Workshops in Leiden',
+    template: '%s | Giftoria Workshops',
+  },
+  description:
+    'Book a hands-on epoxy jewelry, earrings, or necklace workshop in Leiden. Beginner-friendly, all materials included, small groups. Reserve your spot today.',
+  openGraph: {
+    images: [
+      {
+        url: `${appUrl}/og-default.png`,
+        width: 1200,
+        height: 630,
+        alt: 'Giftoria Workshops — Epoxy Jewelry & Creative Workshops in Leiden',
+      },
+    ],
+  },
+  alternates: {
+    languages: {
+      'nl': appUrl,
+      'en': appUrl,
+      'tr': appUrl,
+      'x-default': appUrl,
+    },
+  },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
@@ -32,8 +56,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <a href="/" className="inline-flex items-center gap-2" aria-label="Home">
                   {logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt="Site logo" className="h-8 w-auto" />
+                    <Image src={logoUrl} alt="Site logo" height={32} width={120} className="h-8 w-auto" />
                   ) : (
                     <span className="text-lg font-semibold tracking-wide">Giftoria</span>
                   )}
