@@ -20,40 +20,66 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
     'use server';
     requireAdminAction();
     const categoryId = Number(formData.get('categoryId'));
-    const dateStr = String(formData.get('date') || '').trim(); // yyyy-MM-dd
+    const datesRaw = String(formData.get('dates') || '').trim(); // comma-separated yyyy-MM-dd
     const startStr = String(formData.get('startTime') || '').trim(); // HH:mm
     const endStr = String(formData.get('endTime') || '').trim(); // HH:mm
     const capacity = Number(formData.get('capacity'));
     const price = Number(formData.get('price'));
     const priceCents = Math.round(price * 100);
 
-    if (!categoryId || !dateStr || !startStr || !endStr || !capacity || !price) {
+    if (!categoryId || !datesRaw || !startStr || !endStr || !capacity || !price) {
       return redirect('/admin/workshops?error=Please%20fill%20all%20fields');
+    }
+
+    const dateStrings = datesRaw
+      .split(',')
+      .map((d) => d.trim())
+      .filter(Boolean);
+
+    if (dateStrings.length === 0) {
+      return redirect('/admin/workshops?error=Please%20select%20at%20least%20one%20date');
     }
 
     if (capacity < 1 || price <= 0) {
       return redirect('/admin/workshops?error=Capacity%20and%20price%20must%20be%20positive');
     }
 
-    const date = new Date(`${dateStr}T00:00:00`);
-    const start = new Date(`${dateStr}T${startStr}:00`);
-    const end = new Date(`${dateStr}T${endStr}:00`);
-    if (isNaN(date.valueOf()) || isNaN(start.valueOf()) || isNaN(end.valueOf())) {
-      return redirect('/admin/workshops?error=Invalid%20date%20or%20time');
+    // Validate end > start using an arbitrary date — times are the same for all sessions
+    const referenceStart = new Date(`${dateStrings[0]}T${startStr}:00`);
+    const referenceEnd = new Date(`${dateStrings[0]}T${endStr}:00`);
+    if (isNaN(referenceStart.valueOf()) || isNaN(referenceEnd.valueOf())) {
+      return redirect('/admin/workshops?error=Invalid%20time%20values');
     }
-    // Prevent creating workshops in the past (compare by date only)
-    const today = new Date();
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    if (date < todayMidnight) {
-      return redirect('/admin/workshops?error=Date%20cannot%20be%20in%20the%20past');
-    }
-    if (end <= start) {
+    if (referenceEnd <= referenceStart) {
       return redirect('/admin/workshops?error=End%20time%20must%20be%20after%20start%20time');
     }
 
-  await prisma.session.create({ data: { categoryId, date, startTime: start, endTime: end, capacity, priceCents } });
-  revalidatePath('/admin/workshops');
-  redirect(`/admin/workshops?categoryId=${categoryId}&added=1`);
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    // Validate every date before writing anything
+    for (const dateStr of dateStrings) {
+      const date = new Date(`${dateStr}T00:00:00`);
+      if (isNaN(date.valueOf())) {
+        return redirect('/admin/workshops?error=Invalid%20date%20format');
+      }
+      if (date < todayMidnight) {
+        return redirect('/admin/workshops?error=Date%20cannot%20be%20in%20the%20past');
+      }
+    }
+
+    // Create one session per selected date
+    for (const dateStr of dateStrings) {
+      const date = new Date(`${dateStr}T00:00:00`);
+      const start = new Date(`${dateStr}T${startStr}:00`);
+      const end = new Date(`${dateStr}T${endStr}:00`);
+      await prisma.session.create({
+        data: { categoryId, date, startTime: start, endTime: end, capacity, priceCents },
+      });
+    }
+
+    revalidatePath('/admin/workshops');
+    redirect(`/admin/workshops?categoryId=${categoryId}&added=1`);
   }
 
   async function deleteSession(formData: FormData) {
