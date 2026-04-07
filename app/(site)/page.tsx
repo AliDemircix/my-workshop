@@ -172,7 +172,7 @@ export default async function HomePage() {
               href="/private-event"
               className="border-2 border-gray-300 text-gray-700 hover:border-[#c99706] hover:text-[#c99706] font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-300"
             >
-              Book a Private Event
+              {t('privateEventCta')}
             </Link>
           </div>
 
@@ -521,17 +521,16 @@ export default async function HomePage() {
       {/* Private Event CTA Banner */}
       <section className="rounded-2xl border border-amber-200 bg-amber-50 px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-900">Planning a group event?</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('privateEventTitle')}</h2>
           <p className="text-gray-600 max-w-lg">
-            Book a private workshop session for your team, birthday party, hen night, or family gathering.
-            We handle all the materials — you bring the fun.
+            {t('privateEventBody')}
           </p>
         </div>
         <Link
           href="/private-event"
           className="flex-shrink-0 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-8 py-4 rounded-lg text-base transition-all duration-300 whitespace-nowrap"
         >
-          Book a Private Event
+          {t('privateEventCta')}
         </Link>
       </section>
 

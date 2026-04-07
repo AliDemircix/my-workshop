@@ -150,6 +150,9 @@
     "ctaTitle": "Ready to Create Something Amazing?",
     "ctaBody": "Join hundreds of satisfied participants who have discovered the joy of epoxy art crafting.",
     "ctaButton": "Book Your Workshop Today",
-    "ctaStore": "Visit Our Store"
+    "ctaStore": "Visit Our Store",
+    "privateEventTitle": "Planning a group event?",
+    "privateEventBody": "Book a private workshop session for your team, birthday party, hen night, or family gathering. We handle all the materials — you bring the fun.",
+    "privateEventCta": "Book a Private Event"
   }
 }

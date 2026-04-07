@@ -150,6 +150,9 @@
     "ctaTitle": "Harika Bir Şey Yaratmaya Hazır mısınız?",
     "ctaBody": "Epoksi sanatının keyfini keşfeden yüzlerce memnun katılımcıya katılın.",
     "ctaButton": "Bugün Workshop'unuzu Rezerve Edin",
-    "ctaStore": "Mağazamızı Ziyaret Edin"
+    "ctaStore": "Mağazamızı Ziyaret Edin",
+    "privateEventTitle": "Grup etkinliği mi planlıyorsunuz?",
+    "privateEventBody": "Ekibiniz, doğum günü partiniz, bekarlığa veda ya da aile buluşmanız için özel bir workshop seansi rezerve edin. Tüm malzemeleri biz sağlarız — eğlenceyi siz getirin.",
+    "privateEventCta": "Özel Etkinlik Rezervasyonu"
   }
 }
