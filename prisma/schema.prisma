@@ -157,6 +157,15 @@ model WebhookEvent {
   createdAt     DateTime  @default(now())
 }
 
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  entityType String
+  entityId   String
+  details    String?
+  createdAt  DateTime @default(now())
+}
+
 // Slider images for the Reserve page
 model SiteSliderImage {
   id             Int          @id @default(autoincrement())

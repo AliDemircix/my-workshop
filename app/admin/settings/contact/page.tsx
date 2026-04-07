@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminAction } from '@/lib/auth';
 import SettingsToast from '@/components/admin/SettingsToast';
+import { logAction } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,7 @@ async function saveContact(formData: FormData) {
     return redirect('/admin/settings/contact?error=1');
   }
 
+  logAction('SETTINGS_SAVED', 'SiteSettings', '1', { section: 'contact' });
   revalidatePath('/');
   redirect('/admin/settings/contact?saved=1');
 }

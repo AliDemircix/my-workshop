@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import WorkshopsToast from '@/components/admin/WorkshopsToast';
 import AddWorkshopDialog from '@/components/admin/AddWorkshopDialog';
 import { requireAdminAction } from '@/lib/auth';
+import { logAction } from '@/lib/audit';
 
 export default async function WorkshopsPage({ searchParams }: { searchParams?: { error?: string; page?: string; categoryId?: string } }) {
   const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
@@ -119,6 +120,7 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
       redirect(`/admin/workshops?error=Cannot%20delete%20a%20session%20with%20reservations&page=${page}`);
     }
     await prisma.session.delete({ where: { id } });
+    logAction('SESSION_DELETED', 'Session', String(id));
     revalidatePath('/admin/workshops');
     redirect(`/admin/workshops?page=${page}`);
   }

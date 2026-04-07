@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireAdminAction } from '@/lib/auth';
 import SettingsToast from '@/components/admin/SettingsToast';
 import CategoryImageUploader from '@/components/admin/CategoryImageUploader';
+import { logAction } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ async function saveBranding(formData: FormData) {
     return redirect('/admin/settings/branding?error=1');
   }
 
+  logAction('SETTINGS_SAVED', 'SiteSettings', '1', { section: 'branding' });
   revalidatePath('/');
   redirect('/admin/settings/branding?saved=1');
 }

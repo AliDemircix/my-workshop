@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminAction } from '@/lib/auth';
 import SettingsToast from '@/components/admin/SettingsToast';
+import { logAction } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ async function saveSocial(formData: FormData) {
     return redirect('/admin/settings/social?error=1');
   }
 
+  logAction('SETTINGS_SAVED', 'SiteSettings', '1', { section: 'social' });
   revalidatePath('/');
   redirect('/admin/settings/social?saved=1');
 }

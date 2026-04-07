@@ -1,7 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { formatEUR } from '@/lib/currency';
-import { format } from 'date-fns';
+import { format, startOfWeek, addWeeks } from 'date-fns';
+import RevenueChart from '@/components/admin/RevenueChart';
+import CategoryStats from '@/components/admin/CategoryStats';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +12,21 @@ export default async function AdminHome() {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-  const [todayReservations, paidToday, recentReservations, totalReservations, upcomingSessions] = await Promise.all([
+  // ── Weekly revenue for the last 12 weeks ─────────────────────────────────
+  // Build week buckets manually (SQLite has limited date functions)
+  const twelveWeeksAgo = addWeeks(startOfWeek(now, { weekStartsOn: 1 }), -11);
+
+  const [
+    todayReservations,
+    paidToday,
+    recentReservations,
+    totalReservations,
+    upcomingSessions,
+    paidLast12Weeks,
+    allCategories,
+    allPaidReservations,
+    redeemedVouchers,
+  ] = await Promise.all([
     // Today's reservations count
     prisma.reservation.count({
       where: { createdAt: { gte: todayStart, lt: todayEnd } },
@@ -35,9 +51,99 @@ export default async function AdminHome() {
     prisma.session.count({
       where: { date: { gte: now } },
     }),
+    // PAID reservations in the last 12 weeks (for revenue chart)
+    prisma.reservation.findMany({
+      where: {
+        status: 'PAID',
+        createdAt: { gte: twelveWeeksAgo },
+      },
+      select: {
+        quantity: true,
+        createdAt: true,
+        session: { select: { priceCents: true } },
+      },
+    }),
+    // All categories (for category stats)
+    prisma.category.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+    // All PAID reservations with session info (for category stats)
+    prisma.reservation.findMany({
+      where: { status: 'PAID' },
+      select: {
+        quantity: true,
+        session: {
+          select: {
+            priceCents: true,
+            capacity: true,
+            categoryId: true,
+          },
+        },
+      },
+    }),
+    // Redeemed gift vouchers (revenue) — use redeemedByReservationId as proxy for redeemed
+    prisma.giftVoucher.findMany({
+      where: { redeemedByReservationId: { not: null } },
+      select: { amountCents: true },
+    }),
   ]);
 
-  const todayRevenueCents = paidToday.reduce((sum, r) => sum + r.session.priceCents * (r as any).quantity, 0);
+  const todayRevenueCents = paidToday.reduce(
+    (sum, r) => sum + r.session.priceCents * (r as any).quantity,
+    0,
+  );
+
+  // ── Build weekly revenue chart data ──────────────────────────────────────
+  const weekLabels: { label: string; start: Date; end: Date }[] = [];
+  for (let i = 0; i < 12; i++) {
+    const weekStart = addWeeks(twelveWeeksAgo, i);
+    const weekEnd = addWeeks(weekStart, 1);
+    weekLabels.push({
+      label: format(weekStart, 'dd MMM'),
+      start: weekStart,
+      end: weekEnd,
+    });
+  }
+
+  const revenueChartData = weekLabels.map(({ label, start, end }) => {
+    const weekRevenueCents = paidLast12Weeks
+      .filter((r) => r.createdAt >= start && r.createdAt < end)
+      .reduce((sum, r) => sum + r.session.priceCents * r.quantity, 0);
+    return { period: label, revenue: weekRevenueCents / 100 };
+  });
+
+  // ── Build per-category stats ──────────────────────────────────────────────
+  const categoryStatsMap = new Map<
+    number,
+    { bookings: number; revenueCents: number; fillRateSum: number; fillRateCount: number }
+  >();
+  for (const cat of allCategories) {
+    categoryStatsMap.set(cat.id, { bookings: 0, revenueCents: 0, fillRateSum: 0, fillRateCount: 0 });
+  }
+  for (const r of allPaidReservations) {
+    const entry = categoryStatsMap.get(r.session.categoryId);
+    if (!entry) continue;
+    entry.bookings += r.quantity;
+    entry.revenueCents += r.session.priceCents * r.quantity;
+    if (r.session.capacity > 0) {
+      entry.fillRateSum += r.quantity / r.session.capacity;
+      entry.fillRateCount += 1;
+    }
+  }
+
+  const categoryStats = allCategories.map((cat) => {
+    const entry = categoryStatsMap.get(cat.id)!;
+    return {
+      name: cat.name,
+      bookings: entry.bookings,
+      revenue: entry.revenueCents / 100,
+      fillRate: entry.fillRateCount > 0 ? (entry.fillRateSum / entry.fillRateCount) * 100 : 0,
+    };
+  }).filter((s) => s.bookings > 0);
+
+  // ── Gift voucher redemption revenue ──────────────────────────────────────
+  const voucherRevenueCents = redeemedVouchers.reduce((sum, v) => sum + v.amountCents, 0);
 
   const statusColor: Record<string, string> = {
     PAID: 'bg-green-100 text-green-800',
@@ -72,6 +178,21 @@ export default async function AdminHome() {
           <p className="text-sm text-gray-500">Upcoming sessions</p>
           <p className="text-3xl font-bold text-gray-900">{upcomingSessions}</p>
         </div>
+      </div>
+
+      {/* Revenue chart */}
+      <RevenueChart data={revenueChartData} />
+
+      {/* Category performance */}
+      <CategoryStats stats={categoryStats} />
+
+      {/* Gift voucher revenue summary */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500">Gift voucher redemptions</p>
+          <p className="text-xs text-gray-400 mt-0.5">Total value of redeemed gift vouchers</p>
+        </div>
+        <p className="text-2xl font-bold text-[#c99706]">{formatEUR(voucherRevenueCents)}</p>
       </div>
 
       {/* Recent reservations */}

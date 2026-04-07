@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
 import { requireAdminAction } from '@/lib/auth';
 import CancelReservationButton from '@/components/admin/CancelReservationButton';
+import { logAction } from '@/lib/audit';
 
 export const runtime = 'nodejs';
 
@@ -56,6 +57,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
     if (r.stripePaymentIntentId) {
       await stripe.refunds.create({ payment_intent: r.stripePaymentIntentId });
       await prisma.reservation.update({ where: { id }, data: { status: 'REFUNDING', canceledAt: new Date() } });
+      logAction('REFUND_INITIATED', 'Reservation', String(id), { name: r.name, email: r.email, paymentIntent: r.stripePaymentIntentId });
       // Notify user that refund has been initiated
       if (hasSmtpConfig() && r.email) {
         const subject = 'Your refund has been initiated';
@@ -69,6 +71,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
       }
     } else {
       await prisma.reservation.update({ where: { id }, data: { status: 'CANCELED', canceledAt: new Date() } });
+      logAction('RESERVATION_CANCELED', 'Reservation', String(id), { name: r.name, email: r.email });
       // Notify user about cancellation (no payment captured)
       if (hasSmtpConfig() && r.email) {
         const subject = 'Your reservation has been canceled';
@@ -136,9 +139,20 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Reservations</h1>
-        <p className="text-gray-600 mt-1">Manage workshop reservations and process refunds</p>
+      <div className="border-b border-gray-200 pb-4 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Reservations</h1>
+          <p className="text-gray-600 mt-1">Manage workshop reservations and process refunds</p>
+        </div>
+        <a
+          href="/api/admin/export/reservations"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </a>
       </div>
       
       <div className="flex items-center justify-between">
