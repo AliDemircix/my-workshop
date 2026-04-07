@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
+import { generateICS } from '@/lib/ics';
 
 function escapeHtml(str: string | null | undefined): string {
   if (!str) return '';
@@ -151,6 +152,7 @@ export async function POST(req: NextRequest) {
               where: { id: updated.sessionId },
               include: { category: true },
             });
+            const siteSettings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
             const when = sessionDb ? new Date(sessionDb.date) : null;
             const subject = `Your reservation is confirmed`;
             const html = `
@@ -161,8 +163,26 @@ export async function POST(req: NextRequest) {
               <p><strong>Participants:</strong> ${updated.quantity}</p>
               <p>We look forward to seeing you!</p>
             `;
+
+            const attachments = sessionDb
+              ? [
+                  {
+                    filename: 'invite.ics',
+                    content: generateICS({
+                      reservationId: updated.id,
+                      categoryName: sessionDb.category.name,
+                      date: new Date(sessionDb.date),
+                      startTime: new Date(sessionDb.startTime),
+                      endTime: new Date(sessionDb.endTime),
+                      location: siteSettings?.address ?? null,
+                    }),
+                    contentType: 'text/calendar',
+                  },
+                ]
+              : undefined;
+
             // Don't block the webhook response on mail send
-            if (updated.email) sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err)); // email set by customer_details in webhook
+            if (updated.email) sendMail({ to: updated.email, subject, html, attachments }).catch((err) => console.error('Email send failed', err)); // email set by customer_details in webhook
           }
         }
       }

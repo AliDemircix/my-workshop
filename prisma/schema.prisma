@@ -68,6 +68,9 @@ model Reservation {
   canceledAt                DateTime?
   refundId                  String?
   expiresAt                 DateTime?
+  reminderSentAt            DateTime?
+  phone                     String?
+  customerNotes             String?
 }
 
 model GiftVoucher {

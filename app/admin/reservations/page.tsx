@@ -198,6 +198,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
               <th className="px-3 py-2 border-b">#</th>
               <th className="px-3 py-2 border-b">Name</th>
               <th className="px-3 py-2 border-b">Email</th>
+              <th className="px-3 py-2 border-b">Phone</th>
               <th className="px-3 py-2 border-b">Category</th>
               <th className="px-3 py-2 border-b">Date</th>
               <th className="px-3 py-2 border-b">Qty</th>
@@ -209,8 +210,16 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
             {reservations.map((r: any) => (
               <tr key={r.id} className="text-sm hover:bg-gray-50">
                 <td className="px-3 py-2">{r.id}</td>
-                <td className="px-3 py-2">{r.name}</td>
+                <td className="px-3 py-2">
+                  {r.name}
+                  {r.customerNotes && (
+                    <p className="text-xs text-gray-500 mt-0.5 max-w-[16rem] truncate" title={r.customerNotes}>
+                      Note: {r.customerNotes}
+                    </p>
+                  )}
+                </td>
                 <td className="px-3 py-2">{r.email}</td>
+                <td className="px-3 py-2">{r.phone || '—'}</td>
                 <td className="px-3 py-2">{r.session.category.name}</td>
                 <td className="px-3 py-2">{new Date(r.session.date).toDateString()}</td>
                 <td className="px-3 py-2">{r.quantity}</td>

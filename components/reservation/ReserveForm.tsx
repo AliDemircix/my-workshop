@@ -15,6 +15,9 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
   const t = useTranslations('reserve');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [voucherInput, setVoucherInput] = useState('');
@@ -47,12 +50,17 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
   };
 
   const submit = async () => {
+    setPhoneError('');
+    if (phone.trim().length < 7) {
+      setPhoneError('Please enter a valid phone number.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, quantity }),
+        body: JSON.stringify({ sessionId, quantity, phone: phone.trim(), customerNotes: customerNotes.trim() || undefined }),
       });
       if (!res.ok) {
         if (res.status === 409) throw new Error('Not enough spots left for this timeslot.');
@@ -117,6 +125,39 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
         ) : (
           <p className="text-xs text-red-600 mt-1">{t('soldOut')}</p>
         )}
+      </div>
+
+      <div>
+        <label htmlFor="reserve-phone" className="text-sm font-medium text-gray-700 block mb-1">
+          Phone number <span aria-hidden="true">*</span>
+        </label>
+        <input
+          id="reserve-phone"
+          type="tel"
+          required
+          className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706]"
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            if (phoneError) setPhoneError('');
+          }}
+        />
+        {phoneError && <p className="text-xs text-red-600 mt-1">{phoneError}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="reserve-notes" className="text-sm font-medium text-gray-700 block mb-1">
+          Notes <span className="text-gray-400 font-normal">(optional)</span>
+        </label>
+        <textarea
+          id="reserve-notes"
+          className="border rounded px-3 py-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] resize-none"
+          rows={3}
+          maxLength={500}
+          placeholder="Any special requests or notes?"
+          value={customerNotes}
+          onChange={(e) => setCustomerNotes(e.target.value)}
+        />
       </div>
 
       {/* Gift voucher */}

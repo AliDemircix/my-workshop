@@ -7,6 +7,8 @@ import { Prisma } from '@prisma/client';
 const CreateSchema = z.object({
   sessionId: z.number(),
   quantity: z.number().int().min(1).max(10),
+  phone: z.string().min(7),
+  customerNotes: z.string().max(500).optional(),
 });
 
 // 10 requests per hour per IP
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
   const json = await req.json();
   const parsed = CreateSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const { sessionId, quantity } = parsed.data;
+  const { sessionId, quantity, phone, customerNotes } = parsed.data;
 
   const sessionExists = await prisma.session.findUnique({ where: { id: sessionId } });
   if (!sessionExists) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
       if (quantity > remaining) throw new Error('NOT_ENOUGH_SLOTS');
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
       return tx.reservation.create({
-        data: { sessionId, quantity, name: '', email: '', expiresAt },
+        data: { sessionId, quantity, name: '', email: '', expiresAt, phone, customerNotes },
       });
     });
   } catch (err: any) {
