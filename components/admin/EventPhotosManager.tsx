@@ -146,7 +146,7 @@ export default function EventPhotosManager({ categoryId, categoryName, initialPh
 
       {initialPhotos.length === 0 ? (
         <p className="text-sm text-gray-400 py-4 text-center border border-dashed border-gray-200 rounded-lg">
-          No event photos yet. Click "Add Photo" to upload the first one.
+          No event photos yet. Click &quot;Add Photo&quot; to upload the first one.
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

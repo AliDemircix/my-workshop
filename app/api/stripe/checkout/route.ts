@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { checkRateLimit, getIpFromRequest } from '@/lib/rateLimit';
+import { localeFromAcceptLanguage, resolveLocale } from '@/lib/email-templates';
 
 // 10 requests per hour per IP
 const CHECKOUT_LIMIT = 10;
@@ -25,7 +26,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { reservationId, voucherCode, promoCode } = await req.json();
+  const body = await req.json();
+  const { reservationId, voucherCode, promoCode } = body;
+  // Prefer an explicit locale sent by the client; fall back to Accept-Language header.
+  const locale = resolveLocale(body.locale ?? localeFromAcceptLanguage(req.headers.get('accept-language')));
   const reservation = await prisma.reservation.findUnique({
     where: { id: reservationId },
     include: { session: { include: { category: true } } },
@@ -89,6 +93,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         reservationId: String(reservation.id),
         voucherCode: normalizedCode,
+        locale,
       },
     });
 
@@ -154,6 +159,7 @@ export async function POST(req: NextRequest) {
     metadata: {
       reservationId: String(reservation.id),
       ...(promoRecord ? { promoCode: promoRecord.code } : {}),
+      locale,
     },
   });
 

@@ -40,7 +40,7 @@ export default async function TestimonialsSettingsPage() {
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">Testimonials</h1>
         <p className="text-gray-600 mt-1">
-          Control the visibility of the "What Our Students Say" section on the homepage.
+          Control the visibility of the &quot;What Our Students Say&quot; section on the homepage.
           This section currently contains placeholder content.
         </p>
       </div>
@@ -78,7 +78,7 @@ export default async function TestimonialsSettingsPage() {
                 Show Testimonials section
               </label>
               <p className="text-xs text-gray-500">
-                When enabled, the "What Our Students Say" section is visible on the homepage.
+                When enabled, the &quot;What Our Students Say&quot; section is visible on the homepage.
                 Recommended to keep disabled until real Google reviews are integrated.
               </p>
             </div>

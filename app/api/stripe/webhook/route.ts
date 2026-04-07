@@ -3,16 +3,13 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { hasSmtpConfig, sendMail } from '@/lib/mailer';
 import { generateICS } from '@/lib/ics';
-
-function escapeHtml(str: string | null | undefined): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import {
+  resolveLocale,
+  buildReservationConfirmationEmail,
+  buildGiftVoucherPurchaserEmail,
+  buildGiftVoucherRecipientEmail,
+  buildRefundNotificationEmail,
+} from '@/lib/email-templates';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -55,6 +52,7 @@ export async function POST(req: NextRequest) {
   try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as any;
+      const locale = resolveLocale(session.metadata?.locale);
 
       // ── Gift voucher purchase ────────────────────────────────────────────────
       if (session.metadata?.type === 'gift_voucher') {
@@ -76,35 +74,35 @@ export async function POST(req: NextRequest) {
             const expiryLabel = new Date(voucher.expiresAt).toDateString();
 
             // Confirmation to purchaser
-            const purchaserSubject = 'Your gift voucher is ready!';
-            const purchaserHtml = `
-              <p>Hi ${escapeHtml(voucher.purchaserName)},</p>
-              <p>Thank you for purchasing a gift voucher. Here are the details:</p>
-              <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${escapeHtml(voucher.code)}</span></p>
-              <p><strong>Value:</strong> ${escapeHtml(amountLabel)}</p>
-              <p><strong>Valid Until:</strong> ${escapeHtml(expiryLabel)}</p>
-              <p>This voucher can be applied at checkout when booking a workshop.</p>
-              <p>Enjoy!</p>
-            `;
-            sendMail({ to: voucher.purchaserEmail, subject: purchaserSubject, html: purchaserHtml }).catch((err) =>
-              console.error('Gift voucher purchaser email failed', err),
-            );
+            const purchaserTpl = buildGiftVoucherPurchaserEmail({
+              purchaserName: voucher.purchaserName,
+              voucherCode: voucher.code,
+              amountLabel,
+              expiryLabel,
+              locale,
+            });
+            sendMail({
+              to: voucher.purchaserEmail,
+              subject: purchaserTpl.subject,
+              html: purchaserTpl.html,
+              text: purchaserTpl.text,
+            }).catch((err) => console.error('Gift voucher purchaser email failed', err));
 
             // Gift email to recipient if set
             if (voucher.recipientEmail) {
-              const recipientSubject = `You've received a gift voucher!`;
-              const recipientHtml = `
-                <p>Hi there,</p>
-                <p>${escapeHtml(voucher.purchaserName)} has sent you a gift voucher for a workshop!</p>
-                <p><strong>Voucher Code:</strong> <span style="font-size:1.2em;letter-spacing:0.1em;">${escapeHtml(voucher.code)}</span></p>
-                <p><strong>Value:</strong> ${escapeHtml(amountLabel)}</p>
-                <p><strong>Valid Until:</strong> ${escapeHtml(expiryLabel)}</p>
-                <p>Use this code at checkout when booking your workshop.</p>
-                <p>Enjoy!</p>
-              `;
-              sendMail({ to: voucher.recipientEmail, subject: recipientSubject, html: recipientHtml }).catch((err) =>
-                console.error('Gift voucher recipient email failed', err),
-              );
+              const recipientTpl = buildGiftVoucherRecipientEmail({
+                senderName: voucher.purchaserName,
+                voucherCode: voucher.code,
+                amountLabel,
+                expiryLabel,
+                locale,
+              });
+              sendMail({
+                to: voucher.recipientEmail,
+                subject: recipientTpl.subject,
+                html: recipientTpl.html,
+                text: recipientTpl.text,
+              }).catch((err) => console.error('Gift voucher recipient email failed', err));
             }
           }
         }
@@ -153,16 +151,14 @@ export async function POST(req: NextRequest) {
               include: { category: true },
             });
             const siteSettings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-            const when = sessionDb ? new Date(sessionDb.date) : null;
-            const subject = `Your reservation is confirmed`;
-            const html = `
-              <p>Hi ${escapeHtml(updated.name)},</p>
-              <p>Thanks for your payment. Your reservation is confirmed.</p>
-              ${sessionDb ? `<p><strong>Workshop:</strong> ${escapeHtml(sessionDb.category.name)}</p>
-              <p><strong>Date:</strong> ${escapeHtml(when?.toDateString())}</p>` : ''}
-              <p><strong>Participants:</strong> ${updated.quantity}</p>
-              <p>We look forward to seeing you!</p>
-            `;
+
+            const tpl = buildReservationConfirmationEmail({
+              customerName: updated.name,
+              categoryName: sessionDb?.category.name ?? '',
+              sessionDate: sessionDb ? new Date(sessionDb.date) : null,
+              quantity: updated.quantity,
+              locale,
+            });
 
             const attachments = sessionDb
               ? [
@@ -182,7 +178,15 @@ export async function POST(req: NextRequest) {
               : undefined;
 
             // Don't block the webhook response on mail send
-            if (updated.email) sendMail({ to: updated.email, subject, html, attachments }).catch((err) => console.error('Email send failed', err)); // email set by customer_details in webhook
+            if (updated.email) {
+              sendMail({
+                to: updated.email,
+                subject: tpl.subject,
+                html: tpl.html,
+                text: tpl.text,
+                attachments,
+              }).catch((err) => console.error('Email send failed', err));
+            }
           }
         }
       }
@@ -211,13 +215,14 @@ export async function POST(req: NextRequest) {
       if (hasSmtpConfig()) {
         for (const r of reservations) {
           if (!r.email) continue;
-          const subject = 'Your refund has been completed';
-          const html = `
-            <p>Hi ${escapeHtml(r.name)},</p>
-            <p>Your refund has been completed. It may take a few days for it to appear on your statement.</p>
-            <p><strong>Participants:</strong> ${r.quantity}</p>
-          `;
-          sendMail({ to: r.email, subject, html }).catch((e) => console.error('Refund email failed', e));
+          // Refund emails don't have a locale stored on the reservation — use default.
+          const tpl = buildRefundNotificationEmail({
+            customerName: r.name,
+            quantity: r.quantity,
+          });
+          sendMail({ to: r.email, subject: tpl.subject, html: tpl.html, text: tpl.text }).catch((e) =>
+            console.error('Refund email failed', e),
+          );
         }
       }
     }

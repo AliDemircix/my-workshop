@@ -178,7 +178,7 @@ export default function SliderImagesEditor({ initial = [] as string[] }) {
       )}
 
       {images.length > 0 && (
-        <p className="text-xs text-gray-500">Drag thumbnails to reorder. Changes are saved when you click "Save settings".</p>
+        <p className="text-xs text-gray-500">Drag thumbnails to reorder. Changes are saved when you click &quot;Save settings&quot;.</p>
       )}
     </div>
   );

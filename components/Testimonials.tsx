@@ -64,7 +64,7 @@ export default function Testimonials() {
         <div className="text-center space-y-4">
           <h2 className="text-3xl font-bold text-gray-900">What Our Students Say</h2>
           <p className="text-lg text-gray-600">
-            Don't just take our word for it - hear from our happy workshop participants!
+            Don&apos;t just take our word for it - hear from our happy workshop participants!
           </p>
         </div>
         
@@ -87,7 +87,7 @@ export default function Testimonials() {
               
               {/* Quote */}
               <blockquote className="text-lg md:text-xl text-gray-700 italic mb-6 leading-relaxed">
-                "{testimonials[currentIndex].comment}"
+                &quot;{testimonials[currentIndex].comment}&quot;
               </blockquote>
             </div>
             

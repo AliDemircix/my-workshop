@@ -16,8 +16,6 @@ type Props = {
 
 export default function CreateGiftCardForm({ categories, action }: Props) {
   const [isPending, startTransition] = useTransition();
-  // Track the uploaded image URL so it gets included in the submitted form data
-  // via the hidden input rendered by CategoryImageUploader.
   const [, setImageUrl] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -31,10 +29,11 @@ export default function CreateGiftCardForm({ categories, action }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Name */}
+        {/* Name (default / NL) */}
         <div>
           <label htmlFor="gc-name" className="block text-sm font-medium text-gray-700 mb-1">
             Name <span className="text-red-500">*</span>
+            <span className="ml-1 text-xs text-gray-400 font-normal">(NL / default)</span>
           </label>
           <input
             id="gc-name"
@@ -63,6 +62,34 @@ export default function CreateGiftCardForm({ categories, action }: Props) {
           />
         </div>
 
+        {/* Name EN */}
+        <div>
+          <label htmlFor="gc-name-en" className="block text-sm font-medium text-gray-700 mb-1">
+            Name (EN) <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input
+            id="gc-name-en"
+            name="nameEn"
+            type="text"
+            placeholder="e.g. Pottery Workshop Gift Card"
+            className={INPUT_CLASS}
+          />
+        </div>
+
+        {/* Name TR */}
+        <div>
+          <label htmlFor="gc-name-tr" className="block text-sm font-medium text-gray-700 mb-1">
+            Name (TR) <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input
+            id="gc-name-tr"
+            name="nameTr"
+            type="text"
+            placeholder="e.g. Çömlek Atölyesi Hediye Kartı"
+            className={INPUT_CLASS}
+          />
+        </div>
+
         {/* Category */}
         <div>
           <label htmlFor="gc-category" className="block text-sm font-medium text-gray-700 mb-1">
@@ -82,7 +109,7 @@ export default function CreateGiftCardForm({ categories, action }: Props) {
           </select>
         </div>
 
-        {/* Image uploader — replaces the plain URL input (task 41) */}
+        {/* Image uploader */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Image <span className="text-gray-400 font-normal">(optional)</span>
@@ -93,16 +120,44 @@ export default function CreateGiftCardForm({ categories, action }: Props) {
         </div>
       </div>
 
-      {/* Description */}
+      {/* Description (default / NL) */}
       <div>
         <label htmlFor="gc-desc" className="block text-sm font-medium text-gray-700 mb-1">
-          Description <span className="text-gray-400 font-normal">(optional)</span>
+          Description <span className="text-gray-400 font-normal">(NL / default, optional)</span>
         </label>
         <textarea
           id="gc-desc"
           name="description"
-          rows={3}
+          rows={2}
           placeholder="Short description shown on the gift card..."
+          className={`${INPUT_CLASS} resize-none`}
+        />
+      </div>
+
+      {/* Description EN */}
+      <div>
+        <label htmlFor="gc-desc-en" className="block text-sm font-medium text-gray-700 mb-1">
+          Description (EN) <span className="text-gray-400 font-normal">(optional)</span>
+        </label>
+        <textarea
+          id="gc-desc-en"
+          name="descriptionEn"
+          rows={2}
+          placeholder="Short description in English..."
+          className={`${INPUT_CLASS} resize-none`}
+        />
+      </div>
+
+      {/* Description TR */}
+      <div>
+        <label htmlFor="gc-desc-tr" className="block text-sm font-medium text-gray-700 mb-1">
+          Description (TR) <span className="text-gray-400 font-normal">(optional)</span>
+        </label>
+        <textarea
+          id="gc-desc-tr"
+          name="descriptionTr"
+          rows={2}
+          placeholder="Kısa Türkçe açıklama..."
           className={`${INPUT_CLASS} resize-none`}
         />
       </div>

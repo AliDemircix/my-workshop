@@ -22,14 +22,22 @@ export default async function GiftCardsPage() {
     const categoryId = rawCategoryId ? parseInt(rawCategoryId, 10) : null;
 
     const description = String(formData.get('description') || '').trim() || null;
+    const nameEn = String(formData.get('nameEn') || '').trim() || null;
+    const nameTr = String(formData.get('nameTr') || '').trim() || null;
+    const descriptionEn = String(formData.get('descriptionEn') || '').trim() || null;
+    const descriptionTr = String(formData.get('descriptionTr') || '').trim() || null;
     const imageUrl = String(formData.get('imageUrl') || '').trim() || null;
 
     await prisma.giftCard.create({
       data: {
         name,
+        nameEn,
+        nameTr,
         priceCents,
         categoryId: categoryId && !isNaN(categoryId) ? categoryId : null,
         description,
+        descriptionEn,
+        descriptionTr,
         imageUrl,
       },
     });

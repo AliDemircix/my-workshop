@@ -56,7 +56,7 @@ export default async function MaintenancePage() {
 
         {/* Heading */}
         <div className="space-y-3">
-          <h1 className="text-4xl font-bold text-gray-900">We'll Be Back Soon</h1>
+          <h1 className="text-4xl font-bold text-gray-900">We&apos;ll Be Back Soon</h1>
           <p className="text-lg text-gray-600 leading-relaxed">{message}</p>
         </div>
 
