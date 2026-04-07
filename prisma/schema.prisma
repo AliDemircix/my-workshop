@@ -28,6 +28,9 @@ model Category {
   sessions        Session[]
   giftCards       GiftCard[]
   photos          CategoryPhoto[]
+  promoCodes      PromoCode[]
+  privateEventRequests PrivateEventRequest[]
+  reviews         Review[]
 }
 
 model CategoryPhoto {
@@ -80,8 +83,10 @@ model Reservation {
   refundId                  String?
   expiresAt                 DateTime?
   reminderSentAt            DateTime?
+  reviewRequestSentAt       DateTime?
   phone                     String?
   customerNotes             String?
+  review                    Review?
 }
 
 model GiftVoucher {
@@ -186,4 +191,54 @@ model SiteSliderImage {
   siteSettings   SiteSettings @relation(fields: [siteSettingsId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+// ── FEAT-13: Promo / Discount Codes ─────────────────────────────────────────
+// type: "PERCENTAGE" | "FIXED_EUR"
+
+model PromoCode {
+  id         Int       @id @default(autoincrement())
+  code       String    @unique
+  type       String    // "PERCENTAGE" | "FIXED_EUR"
+  value      Float
+  maxUses    Int?
+  usedCount  Int       @default(0)
+  validFrom  DateTime?
+  validUntil DateTime?
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime  @default(now())
+}
+
+// ── FEAT-14: Group / Private Event Inquiry ───────────────────────────────────
+// status: "NEW" | "IN_PROGRESS" | "CLOSED"
+
+model PrivateEventRequest {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String
+  phone          String?
+  groupSize      Int
+  preferredDates String?
+  categoryId     Int?
+  category       Category? @relation(fields: [categoryId], references: [id])
+  message        String?
+  status         String    @default("NEW") // "NEW" | "IN_PROGRESS" | "CLOSED"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ── FEAT-15: Customer Reviews ────────────────────────────────────────────────
+
+model Review {
+  id            Int         @id @default(autoincrement())
+  reservationId Int         @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  categoryId    Int
+  category      Category    @relation(fields: [categoryId], references: [id])
+  name          String
+  rating        Int         // 1–5
+  text          String
+  approved      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
 }

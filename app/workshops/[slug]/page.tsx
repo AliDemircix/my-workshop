@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { slugify } from '@/lib/slug';
 import { getLocale } from 'next-intl/server';
 import WorkshopDetail from '@/components/workshop/WorkshopDetail';
+import WorkshopReviews from '@/components/workshop/WorkshopReviews';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -62,7 +64,7 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
     category = match;
   }
 
-  const [locale, upcomingSessions, settings] = await Promise.all([
+  const [locale, upcomingSessions, settings, approvedReviews] = await Promise.all([
     getLocale(),
     prisma.session.findMany({
       where: {
@@ -73,6 +75,11 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
       take: 10,
     }),
     prisma.siteSettings.findUnique({ where: { id: 1 } }),
+    prisma.review.findMany({
+      where: { categoryId: category.id, approved: true },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
   ]);
 
   function pick(nl: string | null, en: string | null, tr: string | null) {
@@ -105,6 +112,36 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
   const plainDescription = resolvedDescription
     ? resolvedDescription.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
     : `Book the ${category.name} workshop at Giftoria in Leiden.`;
+
+  // AggregateRating JSON-LD (only rendered when there are approved reviews)
+  const aggregateRatingSchema =
+    approvedReviews.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: category.name,
+          description: plainDescription,
+          url: `${baseUrl}/workshops/${slug}`,
+          ...(category.imageUrl ? { image: category.imageUrl } : {}),
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: (
+              approvedReviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
+              approvedReviews.length
+            ).toFixed(1),
+            reviewCount: approvedReviews.length,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: approvedReviews.slice(0, 5).map((r: { name: string; rating: number; text: string; createdAt: Date }) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.name },
+            reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+            reviewBody: r.text,
+            datePublished: new Date(r.createdAt).toISOString().split('T')[0],
+          })),
+        }
+      : null;
 
   const eventSchemas = upcomingSessions.length > 0
     ? upcomingSessions.map((session) => ({
@@ -145,7 +182,7 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
       ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {eventSchemas.map((schema, i) => (
         <script
           key={i}
@@ -153,8 +190,34 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
+      {aggregateRatingSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingSchema) }}
+        />
+      )}
+
       <h1 className="text-2xl font-bold">{category.name}</h1>
       <WorkshopDetail category={{ ...category, description: resolvedDescription, longDescription: resolvedLongDescription }} />
+
+      {/* Private event CTA */}
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-1 text-center md:text-left">
+          <h2 className="text-xl font-bold text-gray-900">Interested in a private session?</h2>
+          <p className="text-gray-600">
+            Book a private {category.name} workshop for your group — parties, team events, and more.
+          </p>
+        </div>
+        <Link
+          href="/private-event"
+          className="flex-shrink-0 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-6 py-3 rounded-lg text-sm transition-all duration-300 whitespace-nowrap"
+        >
+          Inquire about a private event
+        </Link>
+      </div>
+
+      {/* Customer reviews */}
+      <WorkshopReviews reviews={approvedReviews as any} categoryName={category.name} />
     </div>
   );
 }

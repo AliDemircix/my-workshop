@@ -106,6 +106,65 @@ export async function sendWaitlistNotificationEmail(params: WaitlistNotification
   await sendMail({ to, subject, html });
 }
 
+export interface ReviewRequestEmailParams {
+  to: string;
+  customerName: string;
+  categoryName: string;
+  sessionDate: Date;
+  reviewToken: string;
+}
+
+export async function sendReviewRequestEmail(params: ReviewRequestEmailParams): Promise<void> {
+  const { to, customerName, categoryName, sessionDate, reviewToken } = params;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const reviewUrl = `${appUrl}/review?token=${encodeURIComponent(reviewToken)}`;
+  const dateLabel = sessionDate.toDateString();
+
+  const subject = `How was your ${escapeHtml(categoryName)} workshop?`;
+  const html = `
+    <p>Hi ${escapeHtml(customerName)},</p>
+    <p>We hope you enjoyed your <strong>${escapeHtml(categoryName)}</strong> workshop on ${escapeHtml(dateLabel)}!</p>
+    <p>We would love to hear what you thought. It only takes a minute:</p>
+    <p>
+      <a href="${escapeHtml(reviewUrl)}" style="display:inline-block;background:#c99706;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+        Leave a review
+      </a>
+    </p>
+    <p style="color:#888;font-size:0.85em;">This link is personal to you and expires in 30 days.</p>
+  `;
+
+  await sendMail({ to, subject, html });
+}
+
+export interface PrivateEventClosedEmailParams {
+  to: string;
+  customerName: string;
+  categoryName?: string | null;
+  message?: string | null;
+}
+
+export async function sendPrivateEventClosedEmail(params: PrivateEventClosedEmailParams): Promise<void> {
+  const { to, customerName, categoryName, message } = params;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  const subject = 'Update on your private event inquiry';
+  const html = `
+    <p>Hi ${escapeHtml(customerName)},</p>
+    <p>Thank you for your interest in booking a private event${categoryName ? ` for <strong>${escapeHtml(categoryName)}</strong>` : ''}.</p>
+    <p>We wanted to let you know that your inquiry has been reviewed and is now closed.</p>
+    ${message ? `<p><strong>Message from us:</strong> ${escapeHtml(message)}</p>` : ''}
+    <p>If you have any questions or would like to discuss further, feel free to reach out or submit a new inquiry.</p>
+    <p>
+      <a href="${escapeHtml(appUrl)}/private-event" style="display:inline-block;background:#c99706;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+        Submit a new inquiry
+      </a>
+    </p>
+    <p>Thank you for considering us!</p>
+  `;
+
+  await sendMail({ to, subject, html });
+}
+
 export async function sendReminderEmail(params: ReminderEmailParams): Promise<void> {
   const { to, customerName, categoryName, sessionDate, startTime, endTime, quantity, location } = params;
 

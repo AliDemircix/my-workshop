@@ -11,7 +11,27 @@ interface VoucherState {
   error?: string;
 }
 
-export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: number; remaining?: number }) {
+interface PromoState {
+  code: string;
+  status: 'idle' | 'checking' | 'valid' | 'invalid';
+  discountCents?: number;
+  finalAmountCents?: number;
+  type?: string;
+  value?: number;
+  error?: string;
+}
+
+export default function ReserveForm({
+  sessionId,
+  remaining = 0,
+  priceCents = 0,
+  categoryId,
+}: {
+  sessionId: number;
+  remaining?: number;
+  priceCents?: number;
+  categoryId?: number;
+}) {
   const t = useTranslations('reserve');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -22,6 +42,10 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [voucherInput, setVoucherInput] = useState('');
   const [voucher, setVoucher] = useState<VoucherState>({ code: '', status: 'idle' });
+
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<PromoState>({ code: '', status: 'idle' });
 
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), Math.max(1, remaining)));
@@ -49,6 +73,40 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
     setVoucherInput('');
   };
 
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromo({ code, status: 'checking' });
+    try {
+      const totalAmountCents = priceCents * quantity;
+      const res = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, totalAmountCents, ...(categoryId ? { categoryId } : {}) }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setPromo({
+          code,
+          status: 'valid',
+          discountCents: data.discountCents,
+          finalAmountCents: data.finalAmountCents,
+          type: data.type,
+          value: data.value,
+        });
+      } else {
+        setPromo({ code, status: 'invalid', error: data.error || 'Invalid promo code' });
+      }
+    } catch {
+      setPromo({ code, status: 'invalid', error: 'Could not validate promo code. Please try again.' });
+    }
+  };
+
+  const clearPromo = () => {
+    setPromo({ code: '', status: 'idle' });
+    setPromoInput('');
+  };
+
   const submit = async () => {
     setPhoneError('');
     if (phone.trim().length < 7) {
@@ -68,12 +126,17 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
       }
       const reservation = await res.json();
 
-      const appliedCode = voucher.status === 'valid' ? voucher.code : undefined;
+      const appliedVoucherCode = voucher.status === 'valid' ? voucher.code : undefined;
+      const appliedPromoCode = promo.status === 'valid' ? promo.code : undefined;
 
       const checkout = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reservationId: reservation.id, ...(appliedCode ? { voucherCode: appliedCode } : {}) }),
+        body: JSON.stringify({
+          reservationId: reservation.id,
+          ...(appliedVoucherCode ? { voucherCode: appliedVoucherCode } : {}),
+          ...(appliedPromoCode ? { promoCode: appliedPromoCode } : {}),
+        }),
       });
       const data = await checkout.json();
       if (!checkout.ok) {
@@ -96,7 +159,7 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
 
   const buttonLabel = loading
     ? t('processing')
-    : voucher.status === 'valid'
+    : voucher.status === 'valid' || promo.status === 'valid'
     ? t('bookNowVoucher')
     : t('bookNow');
 
@@ -210,6 +273,65 @@ export default function ReserveForm({ sessionId, remaining = 0 }: { sessionId: n
 
             {voucher.status === 'invalid' && (
               <p className="text-sm text-red-600">{voucher.error}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Promo code */}
+      <div className="border-t pt-3">
+        <button
+          type="button"
+          className="text-sm text-[#c99706] hover:underline focus:outline-none flex items-center gap-1"
+          onClick={() => setPromoOpen((o) => !o)}
+        >
+          <svg className={`w-4 h-4 transition-transform ${promoOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          Have a promo code?
+        </button>
+
+        {promoOpen && (
+          <div className="mt-2 space-y-2">
+            {promo.status !== 'valid' && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="border rounded px-3 py-2 flex-1 uppercase tracking-widest text-sm font-mono"
+                  placeholder="PROMO-CODE"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value.toUpperCase());
+                    if (promo.status !== 'idle') setPromo({ code: '', status: 'idle' });
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyPromo(); }}
+                />
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded bg-[#c99706] text-white text-sm hover:bg-[#b3860a] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={applyPromo}
+                  disabled={promo.status === 'checking' || promoInput.trim().length === 0}
+                >
+                  {promo.status === 'checking' ? 'Checking...' : 'Apply'}
+                </button>
+              </div>
+            )}
+
+            {promo.status === 'valid' && promo.discountCents !== undefined && (
+              <div className="flex items-center justify-between rounded bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800">
+                <span>
+                  Promo <strong>{promo.code}</strong> applied — saving{' '}
+                  <strong>&euro;{(promo.discountCents / 100).toFixed(2)}</strong>
+                  {promo.type === 'PERCENTAGE' && ` (${promo.value}% off)`}
+                </span>
+                <button type="button" className="ml-3 text-green-600 hover:text-green-800 underline text-xs" onClick={clearPromo}>
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {promo.status === 'invalid' && (
+              <p className="text-sm text-red-600">{promo.error}</p>
             )}
           </div>
         )}
