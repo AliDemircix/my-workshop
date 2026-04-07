@@ -71,6 +71,41 @@ export interface ReminderEmailParams {
   location?: string | null;
 }
 
+export interface WaitlistNotificationParams {
+  to: string;
+  customerName: string;
+  categoryName: string;
+  sessionDate: Date;
+  startTime: Date;
+  endTime: Date;
+  bookingUrl: string;
+}
+
+export async function sendWaitlistNotificationEmail(params: WaitlistNotificationParams): Promise<void> {
+  const { to, customerName, categoryName, sessionDate, startTime, endTime, bookingUrl } = params;
+
+  const dateLabel = sessionDate.toDateString();
+  const startLabel = startTime.toUTCString().slice(17, 22);
+  const endLabel = endTime.toUTCString().slice(17, 22);
+
+  const subject = 'A spot opened up for your workshop!';
+  const html = `
+    <p>Hi ${escapeHtml(customerName)},</p>
+    <p>Great news! A spot has just opened up for a workshop you were waitlisted for.</p>
+    <p><strong>Workshop:</strong> ${escapeHtml(categoryName)}</p>
+    <p><strong>Date:</strong> ${escapeHtml(dateLabel)}</p>
+    <p><strong>Time:</strong> ${escapeHtml(startLabel)} – ${escapeHtml(endLabel)}</p>
+    <p>
+      <a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:#c99706;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+        Book your spot now
+      </a>
+    </p>
+    <p style="color:#888;font-size:0.85em;">This spot may not last long — book soon to secure your place!</p>
+  `;
+
+  await sendMail({ to, subject, html });
+}
+
 export async function sendReminderEmail(params: ReminderEmailParams): Promise<void> {
   const { to, customerName, categoryName, sessionDate, startTime, endTime, quantity, location } = params;
 

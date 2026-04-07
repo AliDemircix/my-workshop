@@ -154,16 +154,41 @@ function MultiDateCalendar({
 
 // ─── Main dialog ─────────────────────────────────────────────────────────────
 
+export type PrefillSession = {
+  categoryId: number;
+  startTime: string; // HH:mm
+  endTime: string;   // HH:mm
+  capacity: number;
+  priceCents: number;
+};
+
 export default function AddWorkshopDialog({
   action,
   categories,
   defaultCategoryId,
+  prefill,
+  onPrefillConsumed,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   action: (formData: FormData) => void;
   categories: { id: number; name: string }[];
   defaultCategoryId?: number;
+  prefill?: PrefillSession | null;
+  onPrefillConsumed?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  function setOpen(value: boolean) {
+    if (isControlled) {
+      onOpenChange?.(value);
+    } else {
+      setInternalOpen(value);
+    }
+  }
   const dialogRef = useRef<HTMLDivElement>(null);
   const [minDate, setMinDate] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(
@@ -171,14 +196,63 @@ export default function AddWorkshopDialog({
   );
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [dateError, setDateError] = useState('');
+  // Local copy of prefill kept alive for the duration the dialog is open
+  const [activePrefill, setActivePrefill] = useState<PrefillSession | null>(null);
 
   useEffect(() => {
     setSelectedCategoryId(defaultCategoryId ?? categories[0]?.id);
   }, [defaultCategoryId]);
 
+  // Open dialog pre-filled when a duplicate is requested
+  useEffect(() => {
+    if (!prefill) return;
+    setActivePrefill(prefill);
+    setSelectedCategoryId(prefill.categoryId);
+    setSelectedDates([]);
+    setDateError('');
+    setOpen(true);
+    onPrefillConsumed?.(); // reset parent immediately so button can be clicked again
+  }, [prefill]);
+
+  // Auto-focus first interactive element when dialog opens
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable?.[0]?.focus();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  // Escape to close + focus trap
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled'));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     if (open) document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -200,9 +274,16 @@ export default function AddWorkshopDialog({
   }
 
   function handleOpenDialog() {
+    setActivePrefill(null);
+    setSelectedCategoryId(defaultCategoryId ?? categories[0]?.id);
     setSelectedDates([]);
     setDateError('');
     setOpen(true);
+  }
+
+  function handleClose() {
+    setOpen(false);
+    setActivePrefill(null);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -216,20 +297,24 @@ export default function AddWorkshopDialog({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpenDialog}
-        className="bg-gray-900 text-white rounded px-4 py-2"
-      >
-        Add Workshop
-      </button>
+      {/* Render trigger button only in uncontrolled mode */}
+      {!isControlled && (
+        <button
+          type="button"
+          onClick={handleOpenDialog}
+          className="bg-gray-900 text-white rounded px-4 py-2 hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900"
+        >
+          Add Workshop
+        </button>
+      )}
 
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setOpen(false)}
+          onClick={handleClose}
           aria-modal
           role="dialog"
+          aria-labelledby="dialog-title"
         >
           <div
             ref={dialogRef}
@@ -237,11 +322,11 @@ export default function AddWorkshopDialog({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Add Workshop</h3>
+              <h3 id="dialog-title" className="text-lg font-semibold">{activePrefill ? 'Duplicate Workshop' : 'Add Workshop'}</h3>
               <button
                 type="button"
                 className="text-gray-500 hover:text-gray-800"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 aria-label="Close"
               >
                 ✕
@@ -253,6 +338,13 @@ export default function AddWorkshopDialog({
               onSubmit={handleSubmit}
               className="grid grid-cols-1 md:grid-cols-3 gap-3"
             >
+              {/* Duplicate mode banner */}
+              {activePrefill && (
+                <div className="md:col-span-3 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  You are creating a copy of an existing session. Review the details before saving.
+                </div>
+              )}
+
               {/* Category */}
               <div className="flex flex-col gap-1 md:col-span-3">
                 <label className="text-sm font-medium">Category</label>
@@ -306,7 +398,8 @@ export default function AddWorkshopDialog({
                   name="startTime"
                   className="border rounded px-2 py-2"
                   type="time"
-                  defaultValue="13:00"
+                  defaultValue={activePrefill?.startTime ?? '13:00'}
+                  key={activePrefill?.startTime ?? 'start-default'}
                   required
                 />
               </div>
@@ -318,7 +411,8 @@ export default function AddWorkshopDialog({
                   name="endTime"
                   className="border rounded px-2 py-2"
                   type="time"
-                  defaultValue="15:00"
+                  defaultValue={activePrefill?.endTime ?? '15:00'}
+                  key={activePrefill?.endTime ?? 'end-default'}
                   required
                 />
               </div>
@@ -332,7 +426,8 @@ export default function AddWorkshopDialog({
                   type="number"
                   min="1"
                   placeholder="Seats"
-                  defaultValue="6"
+                  defaultValue={activePrefill?.capacity ?? 6}
+                  key={activePrefill?.capacity ?? 'capacity-default'}
                   required
                 />
               </div>
@@ -347,7 +442,8 @@ export default function AddWorkshopDialog({
                   step="0.01"
                   min="0.01"
                   placeholder="e.g. 50"
-                  defaultValue="50"
+                  defaultValue={activePrefill ? (activePrefill.priceCents / 100).toFixed(2) : '50'}
+                  key={activePrefill?.priceCents ?? 'price-default'}
                   required
                 />
               </div>
@@ -357,12 +453,12 @@ export default function AddWorkshopDialog({
                 <button
                   type="button"
                   className="px-4 py-2 rounded border"
-                  onClick={() => setOpen(false)}
+                  onClick={handleClose}
                 >
                   Cancel
                 </button>
                 <button className="bg-gray-900 text-white rounded px-4 py-2">
-                  Add Workshop
+                  {activePrefill ? 'Create Copy' : 'Add Workshop'}
                 </button>
               </div>
             </form>

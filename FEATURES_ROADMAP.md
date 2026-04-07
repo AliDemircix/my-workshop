@@ -11,8 +11,8 @@
 | Sprint | Theme | Duration | Status |
 |--------|-------|----------|--------|
 | Sprint 1 | Data Integrity & Critical Fixes | 1 week | **Completed** |
-| Sprint 2 | Customer Experience | 2 weeks | Planned |
-| Sprint 3 | Admin Business Intelligence | 2 weeks | Planned |
+| Sprint 2 | Customer Experience | 2 weeks | **Completed** |
+| Sprint 3 | Admin Business Intelligence | 2 weeks | **Completed** |
 | Sprint 4 | Booking Experience Upgrades | 2 weeks | Planned |
 | Sprint 5 | Revenue Growth Features | 2 weeks | Planned |
 | Sprint 6 | Reliability & Operations | 1 week | Planned |
@@ -48,18 +48,18 @@ Improve post-booking customer experience with calendar integration, reminders, a
 
 ### Tasks
 
-- [ ] **FEAT-04** — Calendar ICS attachment in confirmation email
+- [x] **FEAT-04** — Calendar ICS attachment in confirmation email
   - Generate `.ics` content (RFC 5545) from session `date`, `startTime`, `endTime`, `category.name`, and `location` from `SiteSettings`
   - Attach as `invite.ics` in the nodemailer options in `app/api/stripe/webhook/route.ts`
   - **Files:** `lib/mailer.ts`, `app/api/stripe/webhook/route.ts`
 
-- [ ] **FEAT-05** — Reminder email 24h before session
+- [x] **FEAT-05** — Reminder email 24h before session
   - Add a `GET /api/cron/send-reminders` endpoint
   - Query PAID reservations whose session date is tomorrow; check `reminderSentAt` is null
   - Send reminder email, set `reminderSentAt DateTime?` on the reservation
   - **Files:** `app/api/cron/send-reminders/route.ts` (new), `prisma/schema.prisma`, `lib/mailer.ts`
 
-- [ ] **FEAT-06** — Phone number and notes on reservation
+- [x] **FEAT-06** — Phone number and notes on reservation
   - Add `phone String?` and `customerNotes String?` to `Reservation` model
   - Add fields to `ReserveForm.tsx` (phone required, notes optional textarea)
   - Pass fields through to `POST /api/reservations` and store them
@@ -75,20 +75,20 @@ Give the admin visibility into revenue, occupancy, and business performance.
 
 ### Tasks
 
-- [ ] **FEAT-07** — Revenue & occupancy dashboard
+- [x] **FEAT-07** — Revenue & occupancy dashboard
   - Replace the current stats row in `app/admin/page.tsx` with a proper dashboard layout
   - Add weekly/monthly revenue chart — aggregate `priceCents * quantity` for PAID reservations grouped by period (use a simple SVG line chart or install `recharts`)
   - Add per-category card: total bookings, total revenue, average fill rate
   - Add gift voucher revenue summary (sum `amountCents` from redeemed `GiftVoucher` records)
   - **Files:** `app/admin/page.tsx`, new `components/admin/RevenueChart.tsx`, `components/admin/CategoryStats.tsx`
 
-- [ ] **FEAT-08** — CSV export for accounting
+- [x] **FEAT-08** — CSV export for accounting
   - Add "Export CSV" button to `app/admin/reservations/page.tsx`
   - Generate CSV on the server with columns: date, session, category, customer name, email, phone, quantity, amount, status, voucher code used
   - Stream response with `Content-Disposition: attachment; filename="reservations-YYYY-MM.csv"`
   - **Files:** `app/api/admin/export/reservations/route.ts` (new), `app/admin/reservations/page.tsx`
 
-- [ ] **FEAT-09** — Admin audit log
+- [x] **FEAT-09** — Admin audit log
   - Add `AuditLog` model: `{ id, action, entityType, entityId, details Json?, createdAt }`
   - Log destructive/write actions: reservation cancelled, refund issued, session deleted, category deleted, settings saved
   - Create `lib/audit.ts` helper: `logAction(action, entityType, entityId, details?)`

@@ -50,7 +50,18 @@ model Session {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   reservations Reservation[]
+  waitlist     Waitlist[]
   stripePriceId String?      // Optional override per-session (else use category/price mapping)
+}
+
+model Waitlist {
+  id         Int       @id @default(autoincrement())
+  sessionId  Int
+  email      String
+  name       String
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  session    Session   @relation(fields: [sessionId], references: [id])
 }
 
 model Reservation {

@@ -8,7 +8,16 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { useTranslations } from 'next-intl';
 
 type Category = { id: number; name: string };
-type CategoryWithMeta = { id: number; name: string; slug?: string | null; description?: string | null; imageUrl?: string | null; longDescription?: string | null };
+type CategoryPhoto = { id: number; url: string };
+type CategoryWithMeta = {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  longDescription?: string | null;
+  photos?: CategoryPhoto[];
+};
 
 function SkeletonBlock({ className }: { className?: string }) {
   return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />;
@@ -39,6 +48,21 @@ export default function ReservationFlow({
   const [viewDate, setViewDate] = useState<Date>(initialViewDate);
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(initialDate ?? null);
   const [selectedTimeslotId, setSelectedTimeslotId] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const cat = categories?.find((c: CategoryWithMeta) => c.id === categoryId);
+    const photos = cat?.photos ?? [];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') setLightboxIndex((i) => ((i ?? 0) + photos.length - 1) % photos.length);
+      if (e.key === 'ArrowRight') setLightboxIndex((i) => ((i ?? 0) + 1) % photos.length);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxIndex, categories, categoryId]);
 
   const { data: availability, isLoading: availabilityLoading } = useQuery<any>({
     queryKey: ['availability', categoryId, viewDate.getMonth(), viewDate.getFullYear()],
@@ -144,9 +168,20 @@ export default function ReservationFlow({
               const cat = categories.find((c: CategoryWithMeta) => c.id === categoryId);
               const url = cat?.imageUrl;
               const desc = cat?.description;
+              const photos: CategoryPhoto[] = cat?.photos ?? [];
+              // All images: hero first, then gallery photos
+              const allImages: string[] = [
+                ...(url ? [url] : []),
+                ...photos.map((p) => p.url),
+              ];
+
               return (
                 <div className="space-y-4">
-                  <div className="relative w-full aspect-[16/9] rounded-lg border bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
+                  {/* Hero image — clickable to open lightbox */}
+                  <div
+                    className={`relative w-full aspect-[16/9] rounded-lg border bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm ${allImages.length > 0 ? 'cursor-zoom-in' : ''}`}
+                    onClick={() => allImages.length > 0 && setLightboxIndex(0)}
+                  >
                     {url ? (
                       <Image src={url} alt={cat?.name || 'Category image'} fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
                     ) : (
@@ -158,6 +193,31 @@ export default function ReservationFlow({
                       </div>
                     )}
                   </div>
+
+                  {/* Thumbnail strip — only shown when there are gallery photos */}
+                  {photos.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {allImages.map((imgUrl, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLightboxIndex(idx)}
+                          className={`relative shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c99706] ${
+                            lightboxIndex === idx ? 'border-[#c99706]' : 'border-gray-200 hover:border-[#c99706]'
+                          }`}
+                          aria-label={`View image ${idx + 1}`}
+                        >
+                          <Image
+                            src={imgUrl}
+                            alt={`${cat?.name ?? 'Workshop'} photo ${idx + 1}`}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {cat && (
                     <div className="bg-white rounded-lg p-6 shadow-sm border">
@@ -172,6 +232,49 @@ export default function ReservationFlow({
                   {!availabilityLoading && (
                     <div className="lg:hidden bg-white rounded-lg shadow-lg border p-6">
                       <ReservationSidebar {...sidebarProps} />
+                    </div>
+                  )}
+
+                  {/* Lightbox */}
+                  {lightboxIndex !== null && allImages.length > 0 && (
+                    <div
+                      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                      onClick={() => setLightboxIndex(null)}
+                    >
+                      <button
+                        onClick={() => setLightboxIndex(null)}
+                        className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        aria-label="Close"
+                      >
+                        ✕
+                      </button>
+                      {allImages.length > 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => ((i ?? 0) + allImages.length - 1) % allImages.length); }}
+                          className="absolute left-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                          aria-label="Previous photo"
+                        >
+                          ‹
+                        </button>
+                      )}
+                      <img
+                        src={allImages[lightboxIndex]}
+                        alt={`${cat?.name ?? 'Workshop'} photo ${lightboxIndex + 1}`}
+                        className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      {allImages.length > 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => ((i ?? 0) + 1) % allImages.length); }}
+                          className="absolute right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 flex items-center justify-center text-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                          aria-label="Next photo"
+                        >
+                          ›
+                        </button>
+                      )}
+                      <div className="absolute bottom-4 text-white/70 text-sm">
+                        {lightboxIndex + 1} / {allImages.length}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -1,14 +1,11 @@
-import { formatEUR } from '@/lib/currency';
 import { prisma } from '@/lib/prisma';
-import { format } from 'date-fns';
 import Link from 'next/link';
-import DeleteSessionButton from '@/components/admin/DeleteSessionButton';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import WorkshopsToast from '@/components/admin/WorkshopsToast';
-import AddWorkshopDialog from '@/components/admin/AddWorkshopDialog';
 import { requireAdminAction } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
+import WorkshopsClientShell from '@/components/admin/WorkshopsClientShell';
 
 export default async function WorkshopsPage({ searchParams }: { searchParams?: { error?: string; page?: string; categoryId?: string } }) {
   const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
@@ -142,26 +139,38 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
     take: pageSize,
   });
 
+  // Serialize Date fields to strings for the Client Component
+  const serializedSessions = sessions.map((s) => ({
+    id: s.id,
+    categoryId: s.categoryId,
+    date: s.date.toISOString(),
+    startTime: s.startTime.toISOString(),
+    endTime: s.endTime.toISOString(),
+    capacity: s.capacity,
+    priceCents: s.priceCents,
+    category: s.category,
+    _count: s._count,
+    reservations: s.reservations,
+  }));
+
   return (
     <div className="space-y-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Workshops</h1>
-        <p className="text-gray-600 mt-1">Manage workshop sessions, schedules, and availability</p>
-      </div>
-      
+      <WorkshopsClientShell
+        sessions={serializedSessions}
+        categories={categories}
+        totalCount={totalCount}
+        action={createSession}
+        deleteAction={deleteSession}
+        defaultCategoryId={activeCategoryId}
+        page={page}
+      />
+
       <WorkshopsToast />
       {searchParams?.error && (
         <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {decodeURIComponent(searchParams.error)}
         </div>
       )}
-
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          Total sessions: <span className="font-semibold">{totalCount}</span>
-        </div>
-        <AddWorkshopDialog action={createSession} categories={categories} defaultCategoryId={activeCategoryId} />
-      </div>
 
       {categories.length > 0 && (
         <div className="flex gap-1 border-b border-gray-200">
@@ -184,112 +193,6 @@ export default async function WorkshopsPage({ searchParams }: { searchParams?: {
           })}
         </div>
       )}
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-sm">
-              <th className="px-3 py-2 border-b">Category</th>
-              <th className="px-3 py-2 border-b">Date</th>
-              <th className="px-3 py-2 border-b">Time</th>
-              <th className="px-3 py-2 border-b">Capacity</th>
-              <th className="px-3 py-2 border-b">Price</th>
-              <th className="px-3 py-2 border-b">Status</th>
-              <th className="px-3 py-2 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {sessions.map((s: { id: number; date: Date; startTime: Date; endTime: Date; capacity: number; priceCents: number; category: { name: string }; _count?: { reservations: number }; reservations?: { quantity: number; status: string }[] }) => (
-              <tr
-                key={s.id}
-                className={`text-sm hover:bg-gray-50 ${new Date(s.endTime) < new Date() ? 'bg-gray-100' : ''}`}
-              >
-                <td className="px-3 py-2 max-w-[10rem]">
-                  <Link href={`/admin/workshops/${s.id}/details`} className="text-blue-600 hover:text-blue-800 underline block truncate" title={s.category.name}>
-                    {s.category.name}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">{new Date(s.date).toDateString()}</td>
-                <td className="px-3 py-2">{format(new Date(s.startTime), 'HH:mm')}–{format(new Date(s.endTime), 'HH:mm')}</td>
-                <td className="px-3 py-2">
-                  {(() => {
-                    const reservedSeats = (s.reservations || []).reduce((sum, r) => (r.status !== 'CANCELED' && r.status !== 'REFUNDED' ? sum + r.quantity : sum), 0);
-                    return `${reservedSeats}/${s.capacity}`;
-                  })()}
-                </td>
-                <td className="px-3 py-2">{formatEUR(s.priceCents)}</td>
-                <td className="px-3 py-2">
-                  {(() => {
-                    const now = new Date();
-                    const end = new Date(s.endTime);
-                    const reservedSeats = (s.reservations || []).reduce((sum, r) => (r.status !== 'CANCELED' && r.status !== 'REFUNDED' ? sum + r.quantity : sum), 0);
-                    const isFinished = end < now;
-                    const isOverbooked = reservedSeats > s.capacity;
-                    const isFull = reservedSeats >= s.capacity;
-                    if (isOverbooked) {
-                      return <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Overbooked</span>;
-                    }
-                    const label = isFinished ? 'Finished' : isFull ? 'Full' : 'Available';
-                    const cls = isFinished
-                      ? 'bg-gray-200 text-gray-800'
-                      : isFull
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800';
-                    return <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{label}</span>;
-                  })()}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    {new Date(s.endTime) < new Date() ? (
-                      <span
-                        className="inline-flex items-center gap-1 opacity-50 cursor-not-allowed text-gray-400"
-                        title="Cannot edit a finished workshop"
-                        aria-disabled="true"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                          <path d="M5.433 13.917l-1.354.339a.75.75 0 01-.904-.904l.339-1.354a2.25 2.25 0 01.592-1.09l6.82-6.82a2.25 2.25 0 113.182 3.182l-6.82 6.82a2.25 2.25 0 01-1.09.592z" />
-                          <path d="M3.25 15.25h13.5a.75.75 0 010 1.5H3.25a.75.75 0 010-1.5z" />
-                        </svg>
-                        <span className="sr-only">Edit</span>
-                      </span>
-                    ) : (
-                      <Link
-                        href={`/admin/workshops/${s.id}`}
-                        className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
-                        title="Edit session"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                          <path d="M5.433 13.917l-1.354.339a.75.75 0 01-.904-.904l.339-1.354a2.25 2.25 0 01.592-1.09l6.82-6.82a2.25 2.25 0 113.182 3.182l-6.82 6.82a2.25 2.25 0 01-1.09.592z" />
-                          <path d="M3.25 15.25h13.5a.75.75 0 010 1.5H3.25a.75.75 0 010-1.5z" />
-                        </svg>
-                        <span className="sr-only">Edit</span>
-                      </Link>
-                    )}
-                    {(() => {
-                      const finished = new Date(s.endTime) < new Date();
-                      const hasRes = (s._count?.reservations || 0) > 0;
-                      const title = finished
-                        ? 'Cannot delete a finished workshop'
-                        : hasRes
-                        ? 'Cannot delete session with reservations'
-                        : 'Delete session';
-                      return (
-                        <DeleteSessionButton
-                          id={s.id}
-                          action={deleteSession}
-                          disabled={finished || hasRes}
-                          title={title}
-                          page={page}
-                        />
-                      );
-                    })()}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       {/* Pagination controls */}
       <div className="flex items-center justify-between gap-3">

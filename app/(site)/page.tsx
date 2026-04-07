@@ -5,6 +5,7 @@ import Slider from '@/components/Slider';
 import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import MailListSubscribe from '@/components/MailListSubscribe';
+import WaitlistInlineForm from '@/components/reservation/WaitlistInlineForm';
 import { formatEUR } from '@/lib/currency';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { getTranslations, getLocale } from 'next-intl/server';
@@ -302,12 +303,15 @@ export default async function HomePage() {
 
                     {/* CTA */}
                     {isFull ? (
-                      <span
-                        aria-disabled="true"
-                        className="block w-full bg-gray-100 text-gray-400 text-center text-sm font-bold py-3 rounded-xl cursor-not-allowed"
-                      >
-                        {t('fullyBooked')}
-                      </span>
+                      <div>
+                        <span
+                          aria-disabled="true"
+                          className="block w-full bg-gray-100 text-gray-400 text-center text-sm font-bold py-3 rounded-xl cursor-not-allowed"
+                        >
+                          {t('fullyBooked')}
+                        </span>
+                        <WaitlistInlineForm sessionId={session.id} />
+                      </div>
                     ) : (
                       <Link
                         href={`/reserve?categoryId=${session.category.id}&date=${session.date.getFullYear()}-${String(session.date.getMonth() + 1).padStart(2, '0')}-${String(session.date.getDate()).padStart(2, '0')}`}

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { hasSmtpConfig, sendMail } from '@/lib/mailer';
+import { hasSmtpConfig, sendMail, sendWaitlistNotificationEmail } from '@/lib/mailer';
 import { requireAdminAction } from '@/lib/auth';
 import CancelReservationButton from '@/components/admin/CancelReservationButton';
 import { logAction } from '@/lib/audit';
@@ -24,6 +24,56 @@ function getStatusTooltip(status: string): string {
       return 'Full refund completed and processed';
     default:
       return status;
+  }
+}
+
+/** Notify the first un-notified waitlist entry for a session if a spot is now free. */
+async function maybeNotifyWaitlist(sessionId: number) {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: {
+      reservations: { select: { quantity: true, status: true } },
+      category: true,
+      waitlist: {
+        where: { notifiedAt: null },
+        orderBy: { createdAt: 'asc' },
+        take: 1,
+      },
+    },
+  });
+  if (!session) return;
+
+  const reserved = session.reservations.reduce(
+    (sum, r) => sum + (['CANCELED', 'REFUNDING', 'REFUNDED'].includes(r.status) ? 0 : r.quantity),
+    0,
+  );
+  const remaining = session.capacity - reserved;
+  if (remaining <= 0) return;
+
+  const entry = session.waitlist[0];
+  if (!entry) return;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+  const bookingUrl = `${appUrl}/reserve`;
+
+  if (!hasSmtpConfig()) return;
+
+  try {
+    await sendWaitlistNotificationEmail({
+      to: entry.email,
+      customerName: entry.name,
+      categoryName: session.category.name,
+      sessionDate: session.date,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      bookingUrl,
+    });
+    await prisma.waitlist.update({
+      where: { id: entry.id },
+      data: { notifiedAt: new Date() },
+    });
+  } catch (e) {
+    console.error('Waitlist notification email failed', e);
   }
 }
 
@@ -69,6 +119,8 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
         `;
         sendMail({ to: r.email, subject, html }).catch((e) => console.error('Cancel email failed', e));
       }
+      // Notify first waitlist entry if a spot freed up
+      await maybeNotifyWaitlist(r.sessionId);
     } else {
       await prisma.reservation.update({ where: { id }, data: { status: 'CANCELED', canceledAt: new Date() } });
       logAction('RESERVATION_CANCELED', 'Reservation', String(id), { name: r.name, email: r.email });
@@ -83,6 +135,8 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
         `;
         sendMail({ to: r.email, subject, html }).catch((e) => console.error('Cancel email failed', e));
       }
+      // Notify first waitlist entry if a spot freed up
+      await maybeNotifyWaitlist(r.sessionId);
     }
   revalidatePath('/admin/reservations');
   const p = new URLSearchParams();
@@ -115,7 +169,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
       : {}),
   };
 
-  const [reservations, total, categories] = await Promise.all([
+  const [reservations, total, categories, waitlistEntries] = await Promise.all([
     prisma.reservation.findMany({
       include: { session: { include: { category: true } } },
       orderBy: orderBy as any,
@@ -125,6 +179,10 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
     }),
     prisma.reservation.count({ where }),
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
+    prisma.waitlist.findMany({
+      include: { session: { include: { category: true } } },
+      orderBy: { createdAt: 'asc' },
+    }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const qsBase = (() => {
@@ -213,6 +271,7 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
               <th className="px-3 py-2 border-b">Name</th>
               <th className="px-3 py-2 border-b">Email</th>
               <th className="px-3 py-2 border-b">Phone</th>
+              <th className="px-3 py-2 border-b">Notes</th>
               <th className="px-3 py-2 border-b">Category</th>
               <th className="px-3 py-2 border-b">Date</th>
               <th className="px-3 py-2 border-b">Qty</th>
@@ -224,16 +283,15 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
             {reservations.map((r: any) => (
               <tr key={r.id} className="text-sm hover:bg-gray-50">
                 <td className="px-3 py-2">{r.id}</td>
-                <td className="px-3 py-2">
-                  {r.name}
-                  {r.customerNotes && (
-                    <p className="text-xs text-gray-500 mt-0.5 max-w-[16rem] truncate" title={r.customerNotes}>
-                      Note: {r.customerNotes}
-                    </p>
-                  )}
-                </td>
+                <td className="px-3 py-2">{r.name}</td>
                 <td className="px-3 py-2">{r.email}</td>
                 <td className="px-3 py-2">{r.phone || '—'}</td>
+                <td className="px-3 py-2">
+                  {r.customerNotes
+                    ? <span className="text-xs text-gray-600 max-w-[14rem] truncate block" title={r.customerNotes}>{r.customerNotes}</span>
+                    : <span className="text-gray-300">—</span>
+                  }
+                </td>
                 <td className="px-3 py-2">{r.session.category.name}</td>
                 <td className="px-3 py-2">{new Date(r.session.date).toDateString()}</td>
                 <td className="px-3 py-2">{r.quantity}</td>
@@ -298,6 +356,63 @@ export default async function AdminReservationsPage({ searchParams }: { searchPa
             <button className="border rounded px-2 py-1 hover:bg-gray-50" type="submit">Go</button>
           </form>
         </div>
+      </div>
+
+      {/* Waitlist section */}
+      <div className="border-t border-gray-200 pt-6 space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Waitlist</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Customers waiting for a spot on sold-out sessions
+            {waitlistEntries.length > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                {waitlistEntries.length} {waitlistEntries.length === 1 ? 'entry' : 'entries'}
+              </span>
+            )}
+          </p>
+        </div>
+        {waitlistEntries.length === 0 ? (
+          <p className="text-sm text-gray-500 italic">No waitlist entries yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-md overflow-hidden">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-sm">
+                  <th className="px-3 py-2 border-b">#</th>
+                  <th className="px-3 py-2 border-b">Name</th>
+                  <th className="px-3 py-2 border-b">Email</th>
+                  <th className="px-3 py-2 border-b">Workshop</th>
+                  <th className="px-3 py-2 border-b">Session Date</th>
+                  <th className="px-3 py-2 border-b">Joined</th>
+                  <th className="px-3 py-2 border-b">Notified</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {waitlistEntries.map((w: any) => (
+                  <tr key={w.id} className="text-sm hover:bg-gray-50">
+                    <td className="px-3 py-2">{w.id}</td>
+                    <td className="px-3 py-2">{w.name}</td>
+                    <td className="px-3 py-2">{w.email}</td>
+                    <td className="px-3 py-2">{w.session.category.name}</td>
+                    <td className="px-3 py-2">{new Date(w.session.date).toDateString()}</td>
+                    <td className="px-3 py-2">{new Date(w.createdAt).toLocaleDateString()}</td>
+                    <td className="px-3 py-2">
+                      {w.notifiedAt ? (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          {new Date(w.notifiedAt).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
