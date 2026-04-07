@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { reservationId, voucherCode } = await req.json();
+  const { reservationId, voucherCode, promoCode } = await req.json();
   const reservation = await prisma.reservation.findUnique({
     where: { id: reservationId },
     include: { session: { include: { category: true } } },
@@ -100,6 +100,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: checkout.url });
   }
 
+  // ── Promo code path ────────────────────────────────────────────────────────
+  let stripeCouponId: string | undefined;
+  let promoRecord: { id: number; code: string; type: string; value: number; usedCount: number; maxUses: number | null } | null = null;
+
+  if (typeof promoCode === 'string' && promoCode.trim().length > 0) {
+    const normalizedPromo = promoCode.trim().toUpperCase();
+    promoRecord = await prisma.promoCode.findUnique({ where: { code: normalizedPromo } });
+
+    if (!promoRecord) {
+      return NextResponse.json({ error: 'Invalid promo code' }, { status: 400 });
+    }
+
+    const now = new Date();
+    if ((promoRecord as any).validFrom && new Date((promoRecord as any).validFrom) > now) {
+      return NextResponse.json({ error: 'Promo code is not yet valid' }, { status: 400 });
+    }
+    if ((promoRecord as any).validUntil && new Date((promoRecord as any).validUntil) < now) {
+      return NextResponse.json({ error: 'Promo code has expired' }, { status: 400 });
+    }
+    if (promoRecord.maxUses !== null && promoRecord.usedCount >= promoRecord.maxUses) {
+      return NextResponse.json({ error: 'Promo code usage limit reached' }, { status: 400 });
+    }
+
+    // Create a Stripe coupon on-the-fly (once per checkout)
+    const coupon = await stripe.coupons.create(
+      promoRecord.type === 'PERCENTAGE'
+        ? { percent_off: promoRecord.value, duration: 'once' }
+        : { amount_off: Math.round(promoRecord.value * 100), currency: 'eur', duration: 'once' },
+    );
+    stripeCouponId = coupon.id;
+  }
+
   // ── Standard path (no voucher) ─────────────────────────────────────────────
   const unitAmount = session.priceCents;
 
@@ -118,13 +150,25 @@ export async function POST(req: NextRequest) {
         quantity: reservation.quantity,
       },
     ],
-    metadata: { reservationId: String(reservation.id) },
+    ...(stripeCouponId ? { discounts: [{ coupon: stripeCouponId }] } : {}),
+    metadata: {
+      reservationId: String(reservation.id),
+      ...(promoRecord ? { promoCode: promoRecord.code } : {}),
+    },
   });
 
   await prisma.reservation.update({
     where: { id: reservation.id },
     data: { stripeCheckoutSessionId: checkout.id },
   });
+
+  // Increment promo usedCount after successful checkout session creation
+  if (promoRecord) {
+    await prisma.promoCode.update({
+      where: { id: promoRecord.id },
+      data: { usedCount: { increment: 1 } },
+    });
+  }
 
   return NextResponse.json({ url: checkout.url });
   } catch (err: any) {

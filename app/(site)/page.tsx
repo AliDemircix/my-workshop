@@ -155,18 +155,24 @@ export default async function HomePage() {
             <span className="bg-amber-100 text-amber-800 px-4 py-2 rounded-full">🎁 {t('badgeTakeHome')}</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/reserve" 
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+            <Link
+              href="/reserve"
               className="bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               {t('bookNow')}
             </Link>
-            <Link 
-              href="#workshops" 
+            <Link
+              href="#workshops"
               className="border-2 border-[#c99706] text-[#c99706] hover:bg-[#c99706] hover:text-white font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-300"
             >
               {t('exploreWorkshops')}
+            </Link>
+            <Link
+              href="/private-event"
+              className="border-2 border-gray-300 text-gray-700 hover:border-[#c99706] hover:text-[#c99706] font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-300"
+            >
+              Book a Private Event
             </Link>
           </div>
 
@@ -511,6 +517,23 @@ export default async function HomePage() {
 
       {/* Mailing List Subscribe */}
       <MailListSubscribe />
+
+      {/* Private Event CTA Banner */}
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-2 text-center md:text-left">
+          <h2 className="text-2xl font-bold text-gray-900">Planning a group event?</h2>
+          <p className="text-gray-600 max-w-lg">
+            Book a private workshop session for your team, birthday party, hen night, or family gathering.
+            We handle all the materials — you bring the fun.
+          </p>
+        </div>
+        <Link
+          href="/private-event"
+          className="flex-shrink-0 bg-[#c99706] hover:bg-[#b8860b] text-white font-semibold px-8 py-4 rounded-lg text-base transition-all duration-300 whitespace-nowrap"
+        >
+          Book a Private Event
+        </Link>
+      </section>
 
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-[#c99706] to-[#b8860b] -mx-4 px-4 py-16 text-white text-center">
