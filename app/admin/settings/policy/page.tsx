@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminAction } from '@/lib/auth';
 import SettingsToast from '@/components/admin/SettingsToast';
+import { logAction } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,7 @@ async function savePolicy(formData: FormData) {
     return redirect('/admin/settings/policy?error=1');
   }
 
+  logAction('SETTINGS_SAVED', 'SiteSettings', '1', { section: 'policy' });
   revalidatePath('/');
   redirect('/admin/settings/policy?saved=1');
 }

@@ -10,6 +10,7 @@ import sanitizeHtml from 'sanitize-html';
 import { slugify } from '@/lib/slug';
 import { requireAdminAction } from '@/lib/auth';
 import CreateCategoryForm from '@/components/admin/CreateCategoryForm';
+import { logAction } from '@/lib/audit';
 
 export default async function CategoriesPage({ searchParams }: { searchParams?: { error?: string } }) {
   async function createCategory(formData: FormData) {
@@ -56,6 +57,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams?: 
       redirect('/admin/categories?error=Cannot%20delete%20a%20category%20with%20sessions');
     }
     await prisma.category.delete({ where: { id } });
+    logAction('CATEGORY_DELETED', 'Category', String(id));
     revalidatePath('/admin/categories');
     redirect('/admin/categories');
   }
