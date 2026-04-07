@@ -115,6 +115,14 @@ export async function POST(req: NextRequest) {
           const existing = await prisma.reservation.findUnique({ where: { id: reservationId } });
           const firstPaid = !(existing && existing.status === 'PAID' && existing.stripePaymentIntentId);
 
+          if (existing?.status === 'CANCELED') {
+            // Cron already expired this reservation — refund the payment
+            if (session.payment_intent) {
+              await stripe.refunds.create({ payment_intent: session.payment_intent as string });
+            }
+            return NextResponse.json({ received: true });
+          }
+
           const customerName = session.customer_details?.name as string | undefined;
           const customerEmail = session.customer_details?.email as string | undefined;
 
@@ -157,6 +165,17 @@ export async function POST(req: NextRequest) {
             if (updated.email) sendMail({ to: updated.email, subject, html }).catch((err) => console.error('Email send failed', err)); // email set by customer_details in webhook
           }
         }
+      }
+    }
+
+    if (event.type === 'checkout.session.expired') {
+      const session = event.data.object as any;
+      const reservationId = session.metadata?.reservationId;
+      if (reservationId) {
+        await prisma.reservation.updateMany({
+          where: { id: Number(reservationId), status: 'PENDING' },
+          data: { status: 'CANCELED', canceledAt: new Date() },
+        });
       }
     }
 

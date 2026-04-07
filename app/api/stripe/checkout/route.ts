@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
   if (reservation.status !== 'PENDING') {
     return NextResponse.json({ error: 'Reservation is not in a payable state' }, { status: 409 });
   }
+  if (reservation.expiresAt && new Date(reservation.expiresAt) < new Date()) {
+    return NextResponse.json({ error: 'Reservation has expired. Please start a new booking.' }, { status: 410 });
+  }
 
   const session = reservation.session;
   const totalPrice = session.priceCents * reservation.quantity;
