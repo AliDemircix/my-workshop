@@ -11,7 +11,7 @@
 | Sprint | Theme | Duration | Status |
 |--------|-------|----------|--------|
 | Sprint 1 | Data Integrity & Critical Fixes | 1 week | **Completed** |
-| Sprint 2 | Customer Self-Service | 2 weeks | Planned |
+| Sprint 2 | Customer Experience | 2 weeks | Planned |
 | Sprint 3 | Admin Business Intelligence | 2 weeks | Planned |
 | Sprint 4 | Booking Experience Upgrades | 2 weeks | Planned |
 | Sprint 5 | Revenue Growth Features | 2 weeks | Planned |
@@ -41,19 +41,12 @@ These are active bugs or data integrity issues affecting the live system now.
 
 ---
 
-## Sprint 2 — Customer Self-Service
+## Sprint 2 — Customer Experience
 > **Duration:** 2 weeks | **Priority:** High
 
-Reduce admin workload and improve post-booking customer experience.
+Improve post-booking customer experience with calendar integration, reminders, and richer reservation data.
 
 ### Tasks
-
-- [ ] **FEAT-03** — Customer self-service cancellation
-  - Generate a signed cancellation token (HMAC-SHA256 of `reservationId + secret`) and include it in the confirmation email as a URL: `/reserve/manage?id=xxx&token=yyy`
-  - Create page `app/(site)/reserve/manage/page.tsx` — shows booking details; cancel button if >48h before session
-  - Cancellation triggers Stripe refund via `stripe.refunds.create` and sends confirmation email
-  - Add `cancellationPolicy` field to `SiteSettings` for admin-configurable cutoff hours
-  - **Files:** `app/(site)/reserve/manage/page.tsx` (new), `app/api/reservations/cancel/route.ts` (new), `lib/mailer.ts`, `prisma/schema.prisma`
 
 - [ ] **FEAT-04** — Calendar ICS attachment in confirmation email
   - Generate `.ics` content (RFC 5545) from session `date`, `startTime`, `endTime`, `category.name`, and `location` from `SiteSettings`
@@ -114,7 +107,7 @@ Improve conversion and operational efficiency in the booking flow.
 - [ ] **FEAT-10** — Waitlist for sold-out sessions
   - Add `Waitlist` model: `{ id, sessionId, email, name, notifiedAt?, createdAt }`
   - When `remaining <= 0`, show "Notify me when a spot opens" button instead of disabled "Sold Out"
-  - On cancellation/refund in the admin panel (and via self-service), check for waitlisted emails and send notification to the first N in queue
+  - On cancellation/refund in the admin panel, check for waitlisted emails and send notification to the first N in queue
   - Admin view of waitlist entries per session in `app/admin/reservations/page.tsx`
   - **Files:** `prisma/schema.prisma`, `components/reservation/ReservationSidebar.tsx`, `app/api/waitlist/route.ts` (new), `app/admin/reservations/page.tsx`, `lib/mailer.ts`
 
