@@ -11,7 +11,7 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes (ISR)
 
 const localeMap: Record<string, string> = {
   en: 'en_GB',

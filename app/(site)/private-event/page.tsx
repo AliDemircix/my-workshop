@@ -3,10 +3,30 @@ import Link from 'next/link';
 import PrivateEventForm from '@/components/PrivateEventForm';
 import type { Metadata } from 'next';
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
   title: 'Book a Private Event | Giftoria Workshops',
   description:
     'Organise a private workshop for your group — birthday parties, team events, hen parties and more. Fill in the inquiry form and we will get back to you.',
+  alternates: {
+    canonical: `${baseUrl}/private-event`,
+  },
+  openGraph: {
+    title: 'Book a Private Event | Giftoria Workshops',
+    description:
+      'Organise a private workshop for your group — birthday parties, team events, hen parties and more. Fill in the inquiry form and we will get back to you.',
+    url: `${baseUrl}/private-event`,
+    type: 'website',
+    images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: 'Book a Private Event at Giftoria Workshops' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Book a Private Event | Giftoria Workshops',
+    description:
+      'Organise a private workshop for your group — birthday parties, team events, hen parties and more.',
+    images: [`${baseUrl}/og-default.png`],
+  },
 };
 
 export default async function PrivateEventPage() {

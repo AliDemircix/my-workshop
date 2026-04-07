@@ -28,14 +28,6 @@ export const metadata = {
       },
     ],
   },
-  alternates: {
-    languages: {
-      'nl': appUrl,
-      'en': appUrl,
-      'tr': appUrl,
-      'x-default': appUrl,
-    },
-  },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

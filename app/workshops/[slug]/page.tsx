@@ -20,8 +20,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 
   const title = `${category.name} | Giftoria Workshops`;
-  const description =
+  const rawDescription =
     category.descriptionEn ?? category.description ?? `Book the ${category.name} workshop at Giftoria.`;
+  // Strip HTML tags so search engine snippets render as plain text
+  const description = rawDescription
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const imageUrl = category.imageUrl ?? undefined;
 
   return {
@@ -36,7 +41,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       url: `${baseUrl}/workshops/${slug}`,
       type: 'website',
       images: imageUrl
-        ? [{ url: imageUrl, alt: category.name }]
+        ? [{ url: imageUrl, width: 1200, height: 630, alt: category.name }]
         : [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: category.name }],
     },
     twitter: {
@@ -143,6 +148,16 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
         }
       : null;
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Workshops', item: `${baseUrl}/workshops` },
+      { '@type': 'ListItem', position: 3, name: category.name, item: `${baseUrl}/workshops/${slug}` },
+    ],
+  };
+
   const eventSchemas = upcomingSessions.length > 0
     ? upcomingSessions.map((session) => ({
         '@context': 'https://schema.org',
@@ -173,16 +188,29 @@ export default async function WorkshopDetailPage({ params }: { params: { slug: s
           name: category.name,
           description: plainDescription,
           url: `${baseUrl}/workshops/${slug}`,
+          // startDate is required for Google rich results; use a TBD sentinel date
+          // that signals "date not yet announced" rather than omitting the field entirely
+          startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           eventStatus: 'https://schema.org/EventScheduled',
           eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
           location: locationSchema,
           organizer: organizerSchema,
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'EUR',
+            availability: 'https://schema.org/InStock',
+            url: `${baseUrl}/reserve?categoryId=${category.id}`,
+          },
           ...(category.imageUrl ? { image: [category.imageUrl] } : {}),
         },
       ];
 
   return (
     <div className="space-y-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {eventSchemas.map((schema, i) => (
         <script
           key={i}

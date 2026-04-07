@@ -17,7 +17,7 @@ export default async function PrivacyPolicyPage() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } }).catch(() => null as any);
   const content = settings?.privacyContent;
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="prose max-w-none">
       <h1>Privacy Policy</h1>
       {content ? (
         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />

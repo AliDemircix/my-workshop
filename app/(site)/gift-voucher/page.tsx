@@ -27,6 +27,15 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+    { '@type': 'ListItem', position: 2, name: 'Gift Cards', item: `${baseUrl}/gift-voucher` },
+  ],
+};
+
 export default async function GiftVoucherPage() {
   const giftCards = await prisma.giftCard.findMany({
     where: { active: true },
@@ -36,6 +45,10 @@ export default async function GiftVoucherPage() {
 
   return (
     <main className="space-y-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-gray-500">
         <Link href="/" className="hover:text-[#c99706] transition-colors">

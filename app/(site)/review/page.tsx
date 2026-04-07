@@ -2,6 +2,15 @@ import { validateReviewToken } from '@/lib/reviewToken';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import ReviewForm from '@/components/ReviewForm';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Leave a Review | Giftoria Workshops',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 interface Props {
   searchParams: { token?: string };

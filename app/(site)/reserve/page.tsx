@@ -1,6 +1,33 @@
 import ReservationFlow from '@/components/reservation/ReservationFlow';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  title: 'Reserve Your Spot | Giftoria Workshops',
+  description:
+    'Pick a workshop, choose a date, and book your spot in minutes. All materials included — join us in Leiden for a hands-on creative experience.',
+  alternates: {
+    canonical: `${baseUrl}/reserve`,
+  },
+  openGraph: {
+    title: 'Reserve Your Spot | Giftoria Workshops',
+    description:
+      'Pick a workshop, choose a date, and book your spot in minutes. All materials included — join us in Leiden for a hands-on creative experience.',
+    url: `${baseUrl}/reserve`,
+    type: 'website',
+    images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: 'Reserve a Giftoria Workshop' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Reserve Your Spot | Giftoria Workshops',
+    description:
+      'Pick a workshop, choose a date, and book your spot in minutes.',
+    images: [`${baseUrl}/og-default.png`],
+  },
+};
 
 export default async function ReservePage({
   searchParams,

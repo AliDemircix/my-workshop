@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="prose max-w-none">
       <h1>Contact Us</h1>
       <ContactDetails />
       <h2>Business Hours</h2>
