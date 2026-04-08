@@ -95,7 +95,7 @@ export default function ReserveForm({
           value: data.value,
         });
       } else {
-        setPromo({ code, status: 'invalid', error: data.error || 'Invalid promo code' });
+        setPromo({ code, status: 'invalid', error: typeof data.error === 'string' ? data.error : 'Invalid promo code' });
       }
     } catch {
       setPromo({ code, status: 'invalid', error: 'Could not validate promo code. Please try again.' });

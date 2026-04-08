@@ -106,6 +106,7 @@ export default function WorkshopDetail({ category }: { category: Category }) {
               setSelectedDateKey={setSelectedDateKey}
               selectedTimeslotId={selectedTimeslotId}
               setSelectedTimeslotId={setSelectedTimeslotId}
+              categoryId={categoryId}
             />
           </div>
         </aside>

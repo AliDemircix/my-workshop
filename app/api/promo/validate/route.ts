@@ -5,7 +5,7 @@ import { z } from 'zod';
 const ValidateSchema = z.object({
   code: z.string().min(1).max(100),
   categoryId: z.number().int().positive().optional(),
-  totalAmountCents: z.number().int().positive(),
+  totalAmountCents: z.number().int().nonnegative(),
 });
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
   const parsed = ValidateSchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const firstError = parsed.error.errors[0]?.message ?? 'Invalid request';
+    return NextResponse.json({ error: firstError }, { status: 400 });
   }
 
   const { code, categoryId, totalAmountCents } = parsed.data;

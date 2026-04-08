@@ -123,6 +123,7 @@ export default function ReservationFlow({
     setSelectedDateKey,
     selectedTimeslotId,
     setSelectedTimeslotId,
+    categoryId: categoryId ?? undefined,
   };
 
   return (

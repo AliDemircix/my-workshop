@@ -19,6 +19,7 @@ export default function ReservationSidebar({
   setSelectedDateKey,
   selectedTimeslotId,
   setSelectedTimeslotId,
+  categoryId,
 }: {
   availability: any | null;
   viewDate: Date;
@@ -27,6 +28,7 @@ export default function ReservationSidebar({
   setSelectedDateKey: (key: string | null) => void;
   selectedTimeslotId: number | null;
   setSelectedTimeslotId: (id: number | null) => void;
+  categoryId?: number;
 }) {
   const t = useTranslations('workshop');
   const locale = useLocale();
@@ -126,7 +128,7 @@ export default function ReservationSidebar({
             const remaining = sel?.remaining ?? 0;
             return (
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <ReserveForm sessionId={selectedTimeslotId} remaining={remaining} />
+                <ReserveForm sessionId={selectedTimeslotId} remaining={remaining} priceCents={sel?.priceCents ?? 0} categoryId={categoryId} />
               </div>
             );
           })()}
