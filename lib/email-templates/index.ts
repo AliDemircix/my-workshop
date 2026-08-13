@@ -8,6 +8,9 @@ export type { EmailTemplate } from './reservation-confirmation';
 export { buildReservationReminderEmail } from './reservation-reminder';
 export type { ReservationReminderParams } from './reservation-reminder';
 
+export { buildReservationAdminNotificationEmail } from './reservation-admin-notification';
+export type { ReservationAdminNotificationParams } from './reservation-admin-notification';
+
 export {
   buildGiftVoucherPurchaserEmail,
   buildGiftVoucherRecipientEmail,

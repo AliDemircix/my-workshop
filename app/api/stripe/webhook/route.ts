@@ -6,6 +6,7 @@ import { generateICS } from '@/lib/ics';
 import {
   resolveLocale,
   buildReservationConfirmationEmail,
+  buildReservationAdminNotificationEmail,
   buildGiftVoucherPurchaserEmail,
   buildGiftVoucherRecipientEmail,
   buildRefundNotificationEmail,
@@ -186,6 +187,27 @@ export async function POST(req: NextRequest) {
                 text: tpl.text,
                 attachments,
               }).catch((err) => console.error('Email send failed', err));
+            }
+
+            // Notify admin of the new paid reservation (best-effort)
+            const adminEmail = process.env.SMTP_FROM || process.env.SMTP_USER || '';
+            if (adminEmail) {
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+              const adminTpl = buildReservationAdminNotificationEmail({
+                customerName: updated.name,
+                customerEmail: updated.email,
+                customerPhone: updated.phone,
+                categoryName: sessionDb?.category.name ?? '',
+                sessionDate: sessionDb ? new Date(sessionDb.date) : null,
+                quantity: updated.quantity,
+                adminUrl: `${appUrl}/admin/reservations`,
+              });
+              sendMail({
+                to: adminEmail,
+                subject: adminTpl.subject,
+                html: adminTpl.html,
+                text: adminTpl.text,
+              }).catch((err) => console.error('Admin notification email failed', err));
             }
           }
         }
